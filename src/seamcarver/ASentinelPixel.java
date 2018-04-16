@@ -7,12 +7,6 @@ import javafx.scene.paint.Color;
 // sentinel pixels frame an image
 abstract class ASentinelPixel extends APixel {
 
-	// sentinel pixels seam infos will toggle between two different constant
-	// seam infos depending on whether we're calculating vertical or horizontal
-	// seams
-	private final ASeamInfo vSeamInfo;
-	private final ASeamInfo hSeamInfo;
-
 	// the energies of this pixel for horizontal and vertical seams
 	ASentinelPixel(double verticalSeamEnergy, double horizontalSeamEnergy) {
 		this.vSeamInfo = new VerticalSeamInfo(this, verticalSeamEnergy);
@@ -34,13 +28,13 @@ abstract class ASentinelPixel extends APixel {
 	// changes this.seamInfo to be a seam info with energy of 0
 	@Override
 	void calcVerticalSeamInfo() {
-		this.seamInfo = this.vSeamInfo;
+		
 	}
 
-	// changes this.seamInfo to be a seam info with energy of infinity
+	// calculuates horizontal seam info, but since this is a sentinel does nothing because the seam info should be constant
 	@Override
 	void calcHorizontalSeamInfo() {
-		this.seamInfo = this.hSeamInfo;
+		
 	}
 
 	// since this is a sentinel pixel, there can be no bias

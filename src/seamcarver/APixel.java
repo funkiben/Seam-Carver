@@ -15,7 +15,8 @@ abstract class APixel {
 	APixel left;
 
 	// null until calculated
-	ASeamInfo seamInfo = null;
+	ASeamInfo vSeamInfo = null;
+	ASeamInfo hSeamInfo = null;
 
 	// gets the brightness of this pixel
 	abstract double brightness();

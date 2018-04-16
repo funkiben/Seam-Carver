@@ -83,16 +83,16 @@ class Pixel extends APixel {
 	// EFFECT: changes this.seamInfo to new calculates seam info
 	@Override
 	void calcVerticalSeamInfo() {
-		this.seamInfo = new VerticalSeamInfo(this, this.top.seamInfo, this.left.top.seamInfo,
-				this.right.top.seamInfo);
+		this.vSeamInfo = new VerticalSeamInfo(this, this.top.vSeamInfo, this.left.top.vSeamInfo,
+				this.right.top.vSeamInfo);
 	}
 
 	// calculates horizontal seam info using left neighbors seam infos
 	// EFFECT: changes this.seamInfo to new calculates seam info
 	@Override
 	void calcHorizontalSeamInfo() {
-		this.seamInfo = new HorizontalSeamInfo(this, this.left.seamInfo, this.left.top.seamInfo,
-				this.left.bottom.seamInfo);
+		this.hSeamInfo = new HorizontalSeamInfo(this, this.left.hSeamInfo, this.left.top.hSeamInfo,
+				this.left.bottom.hSeamInfo);
 	}
 
 	// adds this.bias to the energy

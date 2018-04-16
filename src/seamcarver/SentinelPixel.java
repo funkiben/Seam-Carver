@@ -7,7 +7,8 @@ class SentinelPixel extends ASentinelPixel {
 	SentinelPixel() {
 		super(Double.MAX_VALUE, Double.MAX_VALUE);
 
-		this.seamInfo = new SentinelSeamInfo(this);
+		this.vSeamInfo = new SentinelSeamInfo(this);
+		this.hSeamInfo = new SentinelSeamInfo(this);
 
 		this.top = this;
 		this.right = this;

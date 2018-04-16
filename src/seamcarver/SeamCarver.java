@@ -1,7 +1,7 @@
 package seamcarver;
 
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.Collection;
 import java.util.Stack;
 
 import javafx.geometry.Point2D;
@@ -80,7 +80,7 @@ public class SeamCarver {
 	}
 
 	// biases the given pixels
-	public void biasPixels(Set<Point2D> points) {
+	public void biasPixels(Collection<Point2D> points) {
 
 		int curX = 0;
 		int curY = 0;
@@ -121,49 +121,49 @@ public class SeamCarver {
 
 	// computes all the vertical seams
 	// EFFECT: changes the seamInfo fields of all pixels
-	private void calculateVerticalSeams() {
-
-		for (APixel rowSentinel : new PixelRowIterable(this.pixel00)) {
-			rowSentinel.calcVerticalSeamInfo();
-		}
-
-		for (APixel columnSentinel : new PixelColumnIterable(this.pixel00)) {
-			columnSentinel.calcVerticalSeamInfo();
-		}
-
+	private ASeamInfo calculuateCheapestVerticalSeam() {
+		
+		ASeamInfo cheapest = this.pixel00.vSeamInfo;
+		
 		for (APixel row : new PixelColumnIterable(this.pixel00)) {
 
 			for (APixel pixel : new PixelRowIterable(row)) {
 
 				pixel.calcVerticalSeamInfo();
-
+				
+				if (row == this.pixel00.top && pixel.vSeamInfo.compare(cheapest) < 0) {
+					cheapest = pixel.vSeamInfo;
+				}
+				
 			}
 
 		}
+		
+		return cheapest;
 
 	}
 
 	// computes all the horizontal seams
 	// EFFECT: changes the seamInfo fields of all pixels
-	private void calculateHorizontalSeams() {
-
-		for (APixel rowSentinel : new PixelRowIterable(this.pixel00)) {
-			rowSentinel.calcHorizontalSeamInfo();
-		}
-
-		for (APixel columnSentinel : new PixelColumnIterable(this.pixel00)) {
-			columnSentinel.calcHorizontalSeamInfo();
-		}
-
+	private ASeamInfo calculateCheapestHorizontalSeam() {
+		
+		ASeamInfo cheapest = this.pixel00.hSeamInfo;
+		
 		for (APixel column : new PixelRowIterable(this.pixel00)) {
 
 			for (APixel pixel : new PixelColumnIterable(column)) {
 
 				pixel.calcHorizontalSeamInfo();
-
+				
+				if (column == this.pixel00.left && pixel.hSeamInfo.compare(cheapest) < 0) {
+					cheapest = pixel.hSeamInfo;
+				}
+				
 			}
 
 		}
+		
+		return cheapest;
 
 	}
 
@@ -223,9 +223,7 @@ public class SeamCarver {
 			throw new IllegalStateException("no more pixels to remove!");
 		}
 
-		this.calculateVerticalSeams();
-
-		ASeamInfo seam = this.cheapestSeam(new PixelRowIterable(this.pixel00.top));
+		ASeamInfo seam = this.calculuateCheapestVerticalSeam();
 
 		seam.remove();
 
@@ -241,33 +239,14 @@ public class SeamCarver {
 		if (this.height == 0) {
 			throw new IllegalStateException("no more pixels to remove!");
 		}
-
-		this.calculateHorizontalSeams();
-
-		ASeamInfo seam = this.cheapestSeam(new PixelColumnIterable(this.pixel00.left));
+		
+		ASeamInfo seam = this.calculateCheapestHorizontalSeam();
 
 		seam.remove();
 
 		this.removedSeams.push(seam);
 
 		this.height -= 1;
-	}
-
-	// finds the cheapest seam in the given pixel iterator
-	private ASeamInfo cheapestSeam(Iterable<APixel> pixels) {
-
-		ASeamInfo cheapest = this.pixel00.seamInfo;
-
-		for (APixel pixel : pixels) {
-
-			if (pixel.seamInfo.compare(cheapest) < 0) {
-				cheapest = pixel.seamInfo;
-			}
-
-		}
-
-		return cheapest;
-
 	}
 
 	// gets the number of removed seams

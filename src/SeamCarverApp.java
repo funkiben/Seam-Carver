@@ -11,6 +11,8 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
@@ -26,6 +28,7 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -49,8 +52,10 @@ public class SeamCarverApp extends Application {
 	private Image originalImage;
 	private SeamCarver seamCarver;
 	private ObjectProperty<Image> image;
-	private StringProperty originalDimensions, dimensions, verticalSeams, horizontalSeams, totalSeams;
-	
+	private ObjectProperty<String> reinsertMode;
+	private StringProperty originalDimensions, dimensions, verticalSeams, horizontalSeams,
+			totalSeams;
+
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		primaryStage.setTitle("Seam Carver");
@@ -58,28 +63,26 @@ public class SeamCarverApp extends Application {
 		primaryStage.setMinHeight(CONTROLS_WIDTH);
 
 		this.originalImage = this.getImage(primaryStage);
-		
+
 		if (this.originalImage == null) {
 			Platform.exit();
 			return;
 		}
-		
+
 		this.seamCarver = new SeamCarver(this.originalImage);
-		
-		
+
 		BorderPane root = new BorderPane();
 		root.setBackground(new Background(new BackgroundFill(Color.BLACK, null, null)));
 
-		ImageView imageView = this.getImageView(primaryStage, this.originalImage);
-		this.image = imageView.imageProperty();
+		StackPane imageView = this.getImageView(primaryStage, this.originalImage);
 		
 		ScrollPane controls = this.getControls();
-		
+
 		this.updateProperties();
 
 		root.setLeft(controls);
 		root.setCenter(imageView);
-		root.setPrefHeight(imageView.getFitHeight());
+		root.setPrefHeight(this.originalImage.getHeight());
 
 		Scene scene = new Scene(root);
 
@@ -113,17 +116,16 @@ public class SeamCarverApp extends Application {
 
 		Text reinsertTitle = new Text("Reinsert");
 		reinsertTitle.setFont(Font.font("Verdana", FontWeight.BOLD, 16));
-		
+
 		Text statusTitle = new Text("Status");
 		statusTitle.setFont(Font.font("Verdana", FontWeight.BOLD, 16));
-
-		ComboBox<String> reinsertModeComboBox = this.getReinsertModeComboBox(content);
 
 		content.getChildren().addAll(this.getRevertToOriginalButton(content), shrinkTitle,
 				this.getShrinkX(content), this.getShrinkY(content), biasTitle,
 				this.getBiasBrushSize(content), this.getUndoBiasButton(content),
-				this.getRemoveAllBiasButton(content), reinsertTitle, reinsertModeComboBox,
-				this.getReinsert(reinsertModeComboBox, content), statusTitle, this.getStatus(content));
+				this.getRemoveAllBiasButton(content), reinsertTitle,
+				this.getReinsertModeComboBox(content), this.getReinsert(content),
+				this.getReinsertAllButton(content), statusTitle, this.getStatus(content));
 
 		controlsRoot.setContent(content);
 
@@ -133,9 +135,9 @@ public class SeamCarverApp extends Application {
 	Button getRevertToOriginalButton(VBox content) {
 		Button button = new Button("Revert to Original");
 		button.prefWidthProperty().bind(content.widthProperty());
-		
+
 		button.setOnAction((e) -> this.revertToOriginal());
-		
+
 		return button;
 	}
 
@@ -222,10 +224,12 @@ public class SeamCarverApp extends Application {
 		comboBox.setValue("Use Original Color");
 		comboBox.prefWidthProperty().bind(content.prefWidthProperty());
 
+		this.reinsertMode = comboBox.valueProperty();
+
 		return comboBox;
 	}
 
-	HBox getReinsert(ComboBox<String> mode, VBox content) {
+	HBox getReinsert(VBox content) {
 		HBox container = new HBox();
 		container.setSpacing(10);
 
@@ -238,15 +242,23 @@ public class SeamCarverApp extends Application {
 				.bind(content.prefWidthProperty().subtract(reinsertButton.prefWidthProperty()));
 		this.makeNumberField(reinsertAmountField);
 
-		reinsertButton
-				.setOnAction((e) -> this.reinsertSeams(mode.getValue().equals("Estimate Color"),
-						Integer.parseInt(reinsertAmountField.textProperty().get())));
+		reinsertButton.setOnAction((e) -> this
+				.reinsertSeams(Integer.parseInt(reinsertAmountField.textProperty().get())));
 
 		container.getChildren().addAll(reinsertButton, reinsertAmountField);
 
 		return container;
 	}
-	
+
+	Button getReinsertAllButton(VBox content) {
+		Button button = new Button("Reinsert All");
+		button.prefWidthProperty().bind(content.widthProperty());
+
+		button.setOnAction((e) -> this.reinsertSeams(this.seamCarver.countRemovedSeams()));
+
+		return button;
+	}
+
 	VBox getStatus(VBox content) {
 		VBox status = new VBox();
 		status.setSpacing(5);
@@ -256,17 +268,18 @@ public class SeamCarverApp extends Application {
 		Text verticalSeams = new Text();
 		Text horizontalSeams = new Text();
 		Text totalSeams = new Text();
-		
+
 		this.originalDimensions = originalDimensionsText.textProperty();
 		this.dimensions = dimensionsText.textProperty();
 		this.verticalSeams = verticalSeams.textProperty();
 		this.horizontalSeams = horizontalSeams.textProperty();
 		this.totalSeams = totalSeams.textProperty();
-		
+
 		status.prefWidthProperty().bind(content.prefWidthProperty());
-		
-		status.getChildren().addAll(originalDimensionsText, dimensionsText, verticalSeams, horizontalSeams, totalSeams);
-		
+
+		status.getChildren().addAll(originalDimensionsText, dimensionsText, verticalSeams,
+				horizontalSeams, totalSeams);
+
 		return status;
 	}
 
@@ -282,15 +295,21 @@ public class SeamCarverApp extends Application {
 		});
 	}
 
-	ImageView getImageView(Stage stage, Image image) {
+	StackPane getImageView(Stage stage, Image image) {
+		StackPane container = new StackPane();
+		
 		ImageView imageView = new ImageView(image);
 
 		imageView.setPreserveRatio(true);
 
 		imageView.fitWidthProperty().bind(stage.widthProperty().subtract(CONTROLS_WIDTH).add(-30));
 		imageView.fitHeightProperty().bind(stage.heightProperty().add(-30));
-
-		return imageView;
+		
+		this.image = imageView.imageProperty();
+		
+		container.getChildren().add(imageView);
+		
+		return container;
 	}
 
 	Image getImage(Stage stage) {
@@ -299,67 +318,95 @@ public class SeamCarverApp extends Application {
 		fileChooser.getExtensionFilters()
 				.add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp"));
 		File imageFile = fileChooser.showOpenDialog(stage);
-		
+
 		if (imageFile == null) {
 			return null;
 		}
-		
+
 		return new Image(imageFile.toURI().toString());
+	}
+	
+	Canvas getBiasCanvas(ImageView imageView) {
+		
+		Canvas canvas = new Canvas();
+		
+		canvas.widthProperty().bind(imageView.fitWidthProperty());
+		canvas.heightProperty().bind(imageView.fitHeightProperty());
+		
+		GraphicsContext gc = canvas.getGraphicsContext2D();
+		
+		gc.setFill(Color.rgb(255, 0, 0, 0.3));
+		gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+		
+		return canvas;
+		
 	}
 
 	void removeVerticalSeams(int amount) {
+
 		for (int i = 0; i < amount; i += 1) {
-			
+
 			if (this.seamCarver.getWidth() == 0) {
 				break;
 			}
-			
+
 			this.seamCarver.removeVerticalSeam();
 		}
+
 		this.image.set(this.seamCarver.makeImage());
 		this.updateProperties();
 	}
 
 	void removeHorizontalSeams(int amount) {
+
 		for (int i = 0; i < amount; i += 1) {
-			
+
 			if (this.seamCarver.getHeight() == 0) {
 				break;
 			}
-			
+
 			this.seamCarver.removeHorizontalSeam();
 		}
+
 		this.image.set(this.seamCarver.makeImage());
 		this.updateProperties();
 	}
 
-	void reinsertSeams(boolean estimateColor, int amount) {
+	void reinsertSeams(int amount) {
+
+		boolean estimateColor = this.reinsertMode.get().equals("Estimate Color");
+
 		for (int i = 0; i < amount; i += 1) {
-			
+
 			if (this.seamCarver.countRemovedSeams() == 0) {
 				break;
 			}
-			
+
 			this.seamCarver.reinsertSeam(estimateColor);
 		}
+
 		this.image.set(this.seamCarver.makeImage());
 		this.updateProperties();
-		
+
 	}
-	
+
 	void revertToOriginal() {
 		this.image.set(this.originalImage);
 		this.seamCarver = new SeamCarver(this.originalImage);
 		this.updateProperties();
 	}
-	
+
 	void updateProperties() {
-		this.originalDimensions.set("Original: " + (int) this.originalImage.getWidth() + "x" + (int) this.originalImage.getHeight());
-		this.dimensions.set("Carved: " + this.seamCarver.getWidth() + "x" + this.seamCarver.getHeight());
-		
-		this.verticalSeams.set("Vertical Seams: " + (int) (this.originalImage.getWidth() - this.seamCarver.getWidth()));
-		this.horizontalSeams.set("Horizontal Seams: " + (int) (this.originalImage.getHeight() - this.seamCarver.getHeight()));
-		
+		this.originalDimensions.set("Original: " + (int) this.originalImage.getWidth() + "x"
+				+ (int) this.originalImage.getHeight());
+		this.dimensions
+				.set("Carved: " + this.seamCarver.getWidth() + "x" + this.seamCarver.getHeight());
+
+		this.verticalSeams.set("Vertical Seams: "
+				+ (int) (this.originalImage.getWidth() - this.seamCarver.getWidth()));
+		this.horizontalSeams.set("Horizontal Seams: "
+				+ (int) (this.originalImage.getHeight() - this.seamCarver.getHeight()));
+
 		this.totalSeams.set("Total Seams: " + this.seamCarver.countRemovedSeams());
 	}
 
