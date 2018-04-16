@@ -283,18 +283,22 @@ public class SeamCarver {
 
 				if (pixel.right.left != pixel) {
 					System.out.println("found a pixel where its right does not refer to it");
+					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.right.getClass().getSimpleName());
 				}
 
 				if (pixel.left.right != pixel) {
 					System.out.println("found a pixel where its left does not refer to it");
+					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.left.getClass().getSimpleName());
 				}
 				
 				if (pixel.top.bottom != pixel) {
 					System.out.println("found a pixel where its top does not refer to it");
+					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.top.getClass().getSimpleName());
 				}
 				
 				if (pixel.bottom.top != pixel) {
 					System.out.println("found a pixel where its bottom does not refer to it");
+					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.bottom.getClass().getSimpleName());
 				}
 
 			}

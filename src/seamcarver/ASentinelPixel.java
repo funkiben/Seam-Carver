@@ -55,9 +55,10 @@ abstract class ASentinelPixel extends APixel {
 		return Color.BLACK;
 	}
 
+	// the methods below are so messy :(
+
 	// EFFECT: removes the sentinel and fixes up all links caused by the
-	// sentinel
-	// row shifting
+	// sentinel row shifting
 	@Override
 	void removeVertically(APixel nextTop, APixel start) {
 
@@ -94,8 +95,7 @@ abstract class ASentinelPixel extends APixel {
 	}
 
 	// EFFECT: removes the sentinel and fixes up all links caused by the
-	// sentinel
-	// row shifting
+	// sentinel row shifting
 	@Override
 	void removeHorizontally(APixel nextLeft, APixel start) {
 

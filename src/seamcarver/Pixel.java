@@ -9,8 +9,8 @@ class Pixel extends APixel {
 	private static final double BIAS = -1000000000.0D;
 
 	private Color color;
-	private double bias = 0.0D;
-
+	private boolean biased = false;
+	
 	// constructs the pixel with the given neighbors, and links up this to
 	// neighbors appropriately
 	// EFFECT: changes the appropriate links on each of the neighbors to
@@ -48,14 +48,13 @@ class Pixel extends APixel {
 	// uses neighbors average colors to predict this pixels color if
 	// estimateColor is true
 	@Override
-	void reinsert(boolean estimateColor) {
-		super.reinsert(estimateColor);
+	void reinsert(APixel start, boolean estimateColor) {
+		super.reinsert(start, estimateColor);
 
 		if (estimateColor) {
 			this.color = Pixel.averageColor(this.top.color(), this.top.right.color(),
 					this.top.left.color(), this.right.color(), this.left.color(),
 					this.bottom.color(), this.bottom.left.color(), this.bottom.right.color());
-
 		}
 	}
 
@@ -99,13 +98,13 @@ class Pixel extends APixel {
 	// adds this.bias to the energy
 	@Override
 	double energy() {
-		return super.energy() + this.bias;
+		return super.energy() + (this.biased ? Pixel.BIAS : 0);
 	}
 
 	// changes this.bias to be
 	@Override
 	void bias() {
-		this.bias = BIAS;
+		this.biased = true;
 	}
 
 	// gets the color of this pixel

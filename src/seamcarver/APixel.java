@@ -31,7 +31,7 @@ abstract class APixel {
 
 	// reinserts this pixel back into the image
 	// EFFECT: changes all neighbors to refer to this
-	void reinsert(boolean estimateColor) {
+	void reinsert(APixel start, boolean estimateColor) {
 		this.top.bottom = this;
 		this.right.left = this;
 		this.left.right = this;

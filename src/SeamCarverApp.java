@@ -1,6 +1,7 @@
 import java.io.File;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -57,6 +58,12 @@ public class SeamCarverApp extends Application {
 		primaryStage.setMinHeight(CONTROLS_WIDTH);
 
 		this.originalImage = this.getImage(primaryStage);
+		
+		if (this.originalImage == null) {
+			Platform.exit();
+			return;
+		}
+		
 		this.seamCarver = new SeamCarver(this.originalImage);
 		
 		
@@ -292,6 +299,11 @@ public class SeamCarverApp extends Application {
 		fileChooser.getExtensionFilters()
 				.add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp"));
 		File imageFile = fileChooser.showOpenDialog(stage);
+		
+		if (imageFile == null) {
+			return null;
+		}
+		
 		return new Image(imageFile.toURI().toString());
 	}
 

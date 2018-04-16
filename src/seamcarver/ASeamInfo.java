@@ -40,10 +40,16 @@ abstract class ASeamInfo {
 	// EFFECT: changes all pixel neighbors in this seam seam to refer back to
 	// the pixels
 	void reinsert(boolean estimateColor) {
-		this.pixel.reinsert(estimateColor);
+		this.reinsert(this.pixel, estimateColor);
+	}
+
+	// reinserts this seam into the image
+	// ACCUMULATOR: start is the first pixel in this seam
+	void reinsert(APixel start, boolean estimateColor) {
+		this.pixel.reinsert(start, estimateColor);
 
 		if (this.cameFrom != null) {
-			this.cameFrom.reinsert(estimateColor);
+			this.cameFrom.reinsert(start, estimateColor);
 		}
 	}
 
