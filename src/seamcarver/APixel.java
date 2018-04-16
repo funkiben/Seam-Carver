@@ -26,6 +26,9 @@ abstract class APixel {
 
 	// biases this pixels energy
 	abstract void bias();
+	
+	// removes bias from this pixel
+	abstract void unbias();
 
 	// gets the color of this pixel
 	abstract Color color();

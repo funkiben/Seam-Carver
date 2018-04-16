@@ -109,6 +109,51 @@ public class SeamCarver {
 
 	}
 
+	// unbiases the given pixels
+	public void unbiasPixels(Collection<Point2D> points) {
+
+		int curX = 0;
+		int curY = 0;
+
+		Point2D point;
+
+		for (APixel row : new PixelColumnIterable(this.pixel00)) {
+
+			curX = 0;
+
+			for (APixel pixel : new PixelRowIterable(row)) {
+
+				point = new Point2D(curX, curY);
+
+				if (points.contains(point)) {
+					pixel.unbias();
+				}
+
+				curX += 1;
+
+			}
+
+			curY += 1;
+
+		}
+
+	}
+
+	// unbiases the given pixels
+	public void unbiasAllPixels() {
+
+		for (APixel row : new PixelColumnIterable(this.pixel00)) {
+
+			for (APixel pixel : new PixelRowIterable(row)) {
+
+				pixel.unbias();
+
+			}
+
+		}
+
+	}
+
 	// gets the current width of the carved image
 	public int getWidth() {
 		return this.width;
@@ -122,23 +167,23 @@ public class SeamCarver {
 	// computes all the vertical seams
 	// EFFECT: changes the seamInfo fields of all pixels
 	private ASeamInfo calculuateCheapestVerticalSeam() {
-		
+
 		ASeamInfo cheapest = this.pixel00.vSeamInfo;
-		
+
 		for (APixel row : new PixelColumnIterable(this.pixel00)) {
 
 			for (APixel pixel : new PixelRowIterable(row)) {
 
 				pixel.calcVerticalSeamInfo();
-				
+
 				if (row == this.pixel00.top && pixel.vSeamInfo.compare(cheapest) < 0) {
 					cheapest = pixel.vSeamInfo;
 				}
-				
+
 			}
 
 		}
-		
+
 		return cheapest;
 
 	}
@@ -146,23 +191,23 @@ public class SeamCarver {
 	// computes all the horizontal seams
 	// EFFECT: changes the seamInfo fields of all pixels
 	private ASeamInfo calculateCheapestHorizontalSeam() {
-		
+
 		ASeamInfo cheapest = this.pixel00.hSeamInfo;
-		
+
 		for (APixel column : new PixelRowIterable(this.pixel00)) {
 
 			for (APixel pixel : new PixelColumnIterable(column)) {
 
 				pixel.calcHorizontalSeamInfo();
-				
+
 				if (column == this.pixel00.left && pixel.hSeamInfo.compare(cheapest) < 0) {
 					cheapest = pixel.hSeamInfo;
 				}
-				
+
 			}
 
 		}
-		
+
 		return cheapest;
 
 	}
@@ -210,7 +255,7 @@ public class SeamCarver {
 
 		this.width += seam.width();
 		this.height += seam.height();
-		
+
 		this.testStructualInvariant();
 
 	}
@@ -239,7 +284,7 @@ public class SeamCarver {
 		if (this.height == 0) {
 			throw new IllegalStateException("no more pixels to remove!");
 		}
-		
+
 		ASeamInfo seam = this.calculateCheapestHorizontalSeam();
 
 		seam.remove();
@@ -262,22 +307,26 @@ public class SeamCarver {
 
 				if (pixel.right.left != pixel) {
 					System.out.println("found a pixel where its right does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.right.getClass().getSimpleName());
+					System.out.println("A " + pixel.getClass().getSimpleName()
+							+ " is not referenced by a " + pixel.right.getClass().getSimpleName());
 				}
 
 				if (pixel.left.right != pixel) {
 					System.out.println("found a pixel where its left does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.left.getClass().getSimpleName());
+					System.out.println("A " + pixel.getClass().getSimpleName()
+							+ " is not referenced by a " + pixel.left.getClass().getSimpleName());
 				}
-				
+
 				if (pixel.top.bottom != pixel) {
 					System.out.println("found a pixel where its top does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.top.getClass().getSimpleName());
+					System.out.println("A " + pixel.getClass().getSimpleName()
+							+ " is not referenced by a " + pixel.top.getClass().getSimpleName());
 				}
-				
+
 				if (pixel.bottom.top != pixel) {
 					System.out.println("found a pixel where its bottom does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName() + " is not referenced by a " + pixel.bottom.getClass().getSimpleName());
+					System.out.println("A " + pixel.getClass().getSimpleName()
+							+ " is not referenced by a " + pixel.bottom.getClass().getSimpleName());
 				}
 
 			}

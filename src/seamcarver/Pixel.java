@@ -10,7 +10,7 @@ class Pixel extends APixel {
 
 	private Color color;
 	private boolean biased = false;
-	
+
 	// constructs the pixel with the given neighbors, and links up this to
 	// neighbors appropriately
 	// EFFECT: changes the appropriate links on each of the neighbors to
@@ -42,15 +42,18 @@ class Pixel extends APixel {
 	// sets the color to this.color
 	@Override
 	void setColor(PixelWriter pixelWriter, int x, int y) {
-		pixelWriter.setColor(x, y, this.color);
+		pixelWriter.setColor(x, y, this.biased ? this.color.invert() : this.color);
 	}
 
 	// uses neighbors average colors to predict this pixels color if
 	// estimateColor is true
+	// EFFECT: changes this.biased to false
 	@Override
 	void reinsert(APixel start, boolean estimateColor) {
 		super.reinsert(start, estimateColor);
-
+		
+		this.biased = false;
+		
 		if (estimateColor) {
 			this.color = Pixel.averageColor(this.top.color(), this.top.right.color(),
 					this.top.left.color(), this.right.color(), this.left.color(),
@@ -101,10 +104,16 @@ class Pixel extends APixel {
 		return super.energy() + (this.biased ? Pixel.BIAS : 0);
 	}
 
-	// changes this.bias to be
+	// EFFECT: changes this.bias to be true
 	@Override
 	void bias() {
 		this.biased = true;
+	}
+
+	// EFFECT: changes this.bias to be false
+	@Override
+	void unbias() {
+		this.biased = false;
 	}
 
 	// gets the color of this pixel

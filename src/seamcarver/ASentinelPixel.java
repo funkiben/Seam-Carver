@@ -28,18 +28,25 @@ abstract class ASentinelPixel extends APixel {
 	// changes this.seamInfo to be a seam info with energy of 0
 	@Override
 	void calcVerticalSeamInfo() {
-		
+
 	}
 
-	// calculuates horizontal seam info, but since this is a sentinel does nothing because the seam info should be constant
+	// calculuates horizontal seam info, but since this is a sentinel does
+	// nothing because the seam info should be constant
 	@Override
 	void calcHorizontalSeamInfo() {
-		
+
 	}
 
 	// since this is a sentinel pixel, there can be no bias
 	@Override
 	void bias() {
+
+	}
+
+	// since this is a sentinel pixel, there can be no bias
+	@Override
+	void unbias() {
 
 	}
 

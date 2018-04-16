@@ -1,4 +1,7 @@
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,16 +12,17 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -53,8 +57,12 @@ public class SeamCarverApp extends Application {
 	private SeamCarver seamCarver;
 	private ObjectProperty<Image> image;
 	private ObjectProperty<String> reinsertMode;
+	private StringProperty biasBrushSize;
 	private StringProperty originalDimensions, dimensions, verticalSeams, horizontalSeams,
 			totalSeams;
+	private ObjectProperty<Image> biasImage;
+	private final Stack<Set<Point2D>> biasStrokes = new Stack<Set<Point2D>>();
+	private Set<Point2D> currentBiasStroke = new HashSet<Point2D>();
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -75,7 +83,7 @@ public class SeamCarverApp extends Application {
 		root.setBackground(new Background(new BackgroundFill(Color.BLACK, null, null)));
 
 		StackPane imageView = this.getImageView(primaryStage, this.originalImage);
-		
+
 		ScrollPane controls = this.getControls();
 
 		this.updateProperties();
@@ -198,6 +206,8 @@ public class SeamCarverApp extends Application {
 				.subtract(biasBrushSizeText.getBoundsInLocal().getWidth()));
 		this.makeNumberField(biasBrushSizeField);
 
+		this.biasBrushSize = biasBrushSizeField.textProperty();
+
 		container.getChildren().addAll(biasBrushSizeText, biasBrushSizeField);
 
 		return container;
@@ -207,12 +217,14 @@ public class SeamCarverApp extends Application {
 	Button getUndoBiasButton(VBox content) {
 		Button button = new Button("Undo Bias");
 		button.prefWidthProperty().bind(content.widthProperty());
+		button.setOnAction((e) -> this.undoLastBiasStroke());
 		return button;
 	}
 
 	Button getRemoveAllBiasButton(VBox content) {
 		Button button = new Button("Remove All Bias");
 		button.prefWidthProperty().bind(content.widthProperty());
+		button.setOnAction((e) -> this.removeAllBias());
 		return button;
 	}
 
@@ -297,19 +309,50 @@ public class SeamCarverApp extends Application {
 
 	StackPane getImageView(Stage stage, Image image) {
 		StackPane container = new StackPane();
-		
+
 		ImageView imageView = new ImageView(image);
 
 		imageView.setPreserveRatio(true);
 
 		imageView.fitWidthProperty().bind(stage.widthProperty().subtract(CONTROLS_WIDTH).add(-30));
 		imageView.fitHeightProperty().bind(stage.heightProperty().add(-30));
-		
+
 		this.image = imageView.imageProperty();
-		
-		container.getChildren().add(imageView);
-		
+
+		container.getChildren().addAll(imageView, this.getBiasImageView(imageView));
+
 		return container;
+	}
+
+	ImageView getBiasImageView(ImageView imageView) {
+
+		WritableImage biasImage = new WritableImage((int) imageView.getImage().getWidth(),
+				(int) imageView.getImage().getHeight());
+
+		ImageView biasImageView = new ImageView(biasImage);
+
+		biasImageView.setPreserveRatio(true);
+
+		biasImageView.fitWidthProperty().bind(imageView.fitWidthProperty());
+		biasImageView.fitHeightProperty().bind(imageView.fitHeightProperty());
+
+		imageView.setOnMouseDragged((e) -> {
+			this.drawBiasStroke((int) e.getX(), (int) e.getY());
+		});
+
+		imageView.setOnMouseReleased((e) -> {
+			this.finishBiasStroke();
+		});
+
+		this.biasImage = biasImageView.imageProperty();
+
+		imageView.imageProperty().addListener((obs, oldVal, newVal) -> {
+			this.biasImage
+					.set(new WritableImage((int) newVal.getWidth(), (int) newVal.getHeight()));
+		});
+
+		return biasImageView;
+
 	}
 
 	Image getImage(Stage stage) {
@@ -325,22 +368,6 @@ public class SeamCarverApp extends Application {
 
 		return new Image(imageFile.toURI().toString());
 	}
-	
-	Canvas getBiasCanvas(ImageView imageView) {
-		
-		Canvas canvas = new Canvas();
-		
-		canvas.widthProperty().bind(imageView.fitWidthProperty());
-		canvas.heightProperty().bind(imageView.fitHeightProperty());
-		
-		GraphicsContext gc = canvas.getGraphicsContext2D();
-		
-		gc.setFill(Color.rgb(255, 0, 0, 0.3));
-		gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-		
-		return canvas;
-		
-	}
 
 	void removeVerticalSeams(int amount) {
 
@@ -353,7 +380,7 @@ public class SeamCarverApp extends Application {
 			this.seamCarver.removeVerticalSeam();
 		}
 
-		this.image.set(this.seamCarver.makeImage());
+		this.updateCarvedImage();
 		this.updateProperties();
 	}
 
@@ -368,7 +395,7 @@ public class SeamCarverApp extends Application {
 			this.seamCarver.removeHorizontalSeam();
 		}
 
-		this.image.set(this.seamCarver.makeImage());
+		this.updateCarvedImage();
 		this.updateProperties();
 	}
 
@@ -385,9 +412,16 @@ public class SeamCarverApp extends Application {
 			this.seamCarver.reinsertSeam(estimateColor);
 		}
 
-		this.image.set(this.seamCarver.makeImage());
+		this.updateCarvedImage();
 		this.updateProperties();
 
+	}
+
+	void removeAllBias() {
+		this.biasImage.set(new WritableImage((int) this.image.get().getWidth(),
+				(int) this.image.get().getHeight()));
+		this.seamCarver.unbiasAllPixels();
+		this.updateCarvedImage();
 	}
 
 	void revertToOriginal() {
@@ -408,6 +442,56 @@ public class SeamCarverApp extends Application {
 				+ (int) (this.originalImage.getHeight() - this.seamCarver.getHeight()));
 
 		this.totalSeams.set("Total Seams: " + this.seamCarver.countRemovedSeams());
+	}
+
+	void updateCarvedImage() {
+		this.image.set(this.seamCarver.makeImage());
+	}
+
+	void drawBiasStroke(int mx, int my) {
+		PixelWriter pixelWriter = ((WritableImage) this.biasImage.get()).getPixelWriter();
+
+		int brushSize = Integer.parseInt(this.biasBrushSize.get());
+
+		for (int x = -brushSize; x < brushSize; x++) {
+			for (int y = -brushSize; y < brushSize; y++) {
+
+				if (Math.pow(x, 2) + Math.pow(y, 2) <= Math.pow(brushSize, 2)) {
+
+					int px = mx + x;
+					int py = my + y;
+
+					if (px >= 0 && py >= 0 && px < this.biasImage.get().getWidth()
+							&& py < this.biasImage.get().getHeight()) {
+						pixelWriter.setColor(px, py, Color.RED);
+						this.currentBiasStroke.add(new Point2D(px, py));
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+	void finishBiasStroke() {
+		this.seamCarver.biasPixels(this.currentBiasStroke);
+		this.biasStrokes.push(this.currentBiasStroke);
+		this.currentBiasStroke = new HashSet<Point2D>();
+		this.biasImage.set(new WritableImage((int) this.image.get().getWidth(),
+				(int) this.image.get().getHeight()));
+		this.updateCarvedImage();
+	}
+
+	void undoLastBiasStroke() {
+		if (this.biasStrokes.isEmpty()) {
+			return;
+		}
+
+		this.seamCarver.unbiasPixels(this.biasStrokes.pop());
+		this.biasImage.set(new WritableImage((int) this.image.get().getWidth(),
+				(int) this.image.get().getHeight()));
+		this.updateCarvedImage();
 	}
 
 }
