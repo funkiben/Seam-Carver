@@ -29,9 +29,9 @@ class SentinelColumnPixel extends ASentinelPixel {
 	// the columns of sentinels will shift down one, causing the pixels from
 	// this to start to be linked incorrectly
 	@Override
-	void reinsert(APixel start, boolean estimateColor) {
+	void reinsert(APixel start) {
 
-		super.reinsert(start, estimateColor);
+		super.reinsert(start);
 
 		if (this != start.right) {
 

@@ -1,5 +1,7 @@
 package seamcarver;
 
+import java.util.ArrayList;
+
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
@@ -49,6 +51,18 @@ abstract class ASentinelPixel extends APixel {
 	void unbias() {
 
 	}
+	
+	// since this is a sentinel pixel, there is no color of estimate
+	@Override
+	void estimateColor(APixel nextInSeam) {
+		
+	}
+	
+	// this is a sentinel pixel, which has no color
+	@Override
+	void addColor(ArrayList<Color> colors, APixel ignore) {
+		
+	}
 
 	// sentinels are assumed to be black, so returns the color black
 	@Override
@@ -61,7 +75,7 @@ abstract class ASentinelPixel extends APixel {
 	// EFFECT: removes the sentinel and fixes up all links caused by the
 	// sentinel row shifting
 	@Override
-	void removeVertically(APixel nextTop, APixel start) {
+	void removeVertically(APixel nextInSeam, APixel start) {
 
 		if (this != start.bottom) {
 
@@ -98,7 +112,7 @@ abstract class ASentinelPixel extends APixel {
 	// EFFECT: removes the sentinel and fixes up all links caused by the
 	// sentinel row shifting
 	@Override
-	void removeHorizontally(APixel nextLeft, APixel start) {
+	void removeHorizontally(APixel nextInSeam, APixel start) {
 
 		if (this != start.right) {
 

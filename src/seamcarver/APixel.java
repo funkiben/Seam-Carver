@@ -1,4 +1,5 @@
 package seamcarver;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import javafx.scene.image.PixelWriter;
@@ -32,10 +33,18 @@ abstract class APixel {
 
 	// gets the color of this pixel
 	abstract Color color();
+	
+	// estimates the color of this pixel
+	// EFFECT: changes the color of this pixel to an estimate
+	abstract void estimateColor(APixel nextInSeam);
+	
+	// adds this pixels color to the given array list, if it isn't equal to ignore
+	// EFFECT: adds the pixel color, if it has one, to the array list
+	abstract void addColor(ArrayList<Color> colors, APixel ignore);
 
 	// reinserts this pixel back into the image
 	// EFFECT: changes all neighbors to refer to this
-	void reinsert(APixel start, boolean estimateColor) {
+	void reinsert(APixel start) {
 		this.top.bottom = this;
 		this.right.left = this;
 		this.left.right = this;
@@ -79,15 +88,15 @@ abstract class APixel {
 
 	// removes this pixel vertically given the next top pixel in the seam
 	// EFFECT: relinks all neighbors appropriately
-	void removeVertically(APixel nextTop, APixel start) {
+	void removeVertically(APixel nextInSeam, APixel start) {
 
 		this.left.right = this.right;
 		this.right.left = this.left;
 
-		if (nextTop == this.left.top) {
+		if (nextInSeam == this.left.top) {
 			this.left.top = this.top;
 			this.top.bottom = this.left;
-		} else if (nextTop == this.right.top) {
+		} else if (nextInSeam == this.right.top) {
 			this.right.top = this.top;
 			this.top.bottom = this.right;
 		}
@@ -96,15 +105,15 @@ abstract class APixel {
 
 	// removes this pixel horizontally given the next left pixel in the seam
 	// EFFECT: relinks all neighbors appropriately
-	void removeHorizontally(APixel nextLeft, APixel start) {
+	void removeHorizontally(APixel nextInSeam, APixel start) {
 
 		this.top.bottom = this.bottom;
 		this.bottom.top = this.top;
 
-		if (nextLeft == this.left.top) {
+		if (nextInSeam == this.left.top) {
 			this.top.left = this.left;
 			this.left.right = this.top;
-		} else if (nextLeft == this.left.bottom) {
+		} else if (nextInSeam == this.left.bottom) {
 			this.bottom.left = this.left;
 			this.left.right = this.bottom;
 		}

@@ -1,5 +1,7 @@
 package seamcarver;
 
+import java.util.ArrayList;
+
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
@@ -49,37 +51,57 @@ class Pixel extends APixel {
 	// estimateColor is true
 	// EFFECT: changes this.biased to false
 	@Override
-	void reinsert(APixel start, boolean estimateColor) {
-		super.reinsert(start, estimateColor);
-		
+	void reinsert(APixel start) {
+		super.reinsert(start);
+
 		this.biased = false;
-		
-		if (estimateColor) {
-			this.color = Pixel.averageColor(this.top.color(), this.top.right.color(),
-					this.top.left.color(), this.right.color(), this.left.color(),
-					this.bottom.color(), this.bottom.left.color(), this.bottom.right.color());
-		}
+
 	}
 
-	// gets the average color of the given colors
-	private static Color averageColor(Color... colors) {
+	// estimates the color of this pixel by looking at the colors of neighbor
+	// pixels
+	// EFFECT: changes this.color to the estimated color
+	@Override
+	void estimateColor(APixel nextInSeam) {
+
+		ArrayList<Color> colors = new ArrayList<Color>();
+
+		this.top.addColor(colors, nextInSeam);
+		this.top.left.addColor(colors, nextInSeam);
+		this.top.right.addColor(colors, nextInSeam);
+		this.bottom.addColor(colors, nextInSeam);
+		this.bottom.left.addColor(colors, nextInSeam);
+		this.bottom.right.addColor(colors, nextInSeam);
+		this.right.addColor(colors, nextInSeam);
+		this.left.addColor(colors, nextInSeam);
+
 		int r = 0;
 		int g = 0;
 		int b = 0;
 
 		for (Color color : colors) {
 
-			r += Math.pow(color.getRed() * 255, 2);
-			g += Math.pow(color.getGreen() * 255, 2);
-			b += Math.pow(color.getBlue() * 255, 2);
+			r += color.getRed() * 255;
+			g += color.getGreen() * 255;
+			b += color.getBlue() * 255;
 
 		}
 
-		r /= colors.length;
-		g /= colors.length;
-		b /= colors.length;
+		r /= colors.size();
+		g /= colors.size();
+		b /= colors.size();
 
-		return Color.rgb((int) Math.sqrt(r), (int) Math.sqrt(g), (int) Math.sqrt(b));
+		this.color = Color.rgb(r, g, b);
+
+	}
+
+	// adds this pixels color to the array list if it isn't equal to ignore
+	// EFFECT: possibly adds this.color to colors
+	@Override
+	void addColor(ArrayList<Color> colors, APixel ignore) {
+		if (this != ignore) {
+			colors.add(this.color);
+		}
 	}
 
 	// calculates vertical seam info using top neighbors seam infos

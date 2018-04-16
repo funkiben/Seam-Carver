@@ -39,17 +39,31 @@ abstract class ASeamInfo {
 	// approximate their own color
 	// EFFECT: changes all pixel neighbors in this seam seam to refer back to
 	// the pixels
-	void reinsert(boolean estimateColor) {
-		this.reinsert(this.pixel, estimateColor);
+	void reinsert() {
+		this.reinsert(this.pixel);
+	}
+
+	// estimates the color for each pixel in this seam without looking at the
+	// actual pixel colors
+	// EFFECT: changes the color of each pixel in this seam to an estimate
+	void estimateColor() {
+
+		if (this.cameFrom != null) {
+			this.pixel.estimateColor(this.cameFrom.pixel);
+			this.cameFrom.estimateColor();
+		} else {
+			this.pixel.estimateColor(null);
+		}
+
 	}
 
 	// reinserts this seam into the image
 	// ACCUMULATOR: start is the first pixel in this seam
-	void reinsert(APixel start, boolean estimateColor) {
-		this.pixel.reinsert(start, estimateColor);
+	void reinsert(APixel start) {
+		this.pixel.reinsert(start);
 
 		if (this.cameFrom != null) {
-			this.cameFrom.reinsert(start, estimateColor);
+			this.cameFrom.reinsert(start);
 		}
 	}
 

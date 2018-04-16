@@ -1,5 +1,9 @@
 package seamcarver;
 
+import java.util.ArrayList;
+
+import javafx.scene.paint.Color;
+
 // represents a sentinel pixel on a row
 class SentinelRowPixel extends ASentinelPixel {
 
@@ -29,9 +33,9 @@ class SentinelRowPixel extends ASentinelPixel {
 	// the row of sentinels will shift down one, causing the pixels from this to
 	// start to be linked incorrectly
 	@Override
-	void reinsert(APixel start, boolean estimateColor) {
+	void reinsert(APixel start) {
 
-		super.reinsert(start, estimateColor);
+		super.reinsert(start);
 
 		if (this != start.bottom) {
 			
@@ -67,5 +71,6 @@ class SentinelRowPixel extends ASentinelPixel {
 		}
 
 	}
+
 
 }
