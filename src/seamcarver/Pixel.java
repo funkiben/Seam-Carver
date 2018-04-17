@@ -54,45 +54,76 @@ class Pixel extends APixel {
 	void reinsert(APixel start) {
 		super.reinsert(start);
 
-		this.biased = false;
-
 	}
 
-	// estimates the color of this pixel by looking at the colors of neighbor
-	// pixels
+	// estimates the color of this pixel by looking at the colors left and right
+	// neighbors, but only if this is biased
 	// EFFECT: changes this.color to the estimated color
 	@Override
-	void estimateColor(APixel nextInSeam) {
+	void estimateColorVertically(APixel nextInSeam) {
+
+		if (!this.biased) {
+			return;
+		}
+
+		this.biased = false;
+
+		ArrayList<Color> colors = new ArrayList<Color>();
+
+		// this.top.addColor(colors, nextInSeam);
+		//this.top.left.addColor(colors, nextInSeam);
+		//this.top.right.addColor(colors, nextInSeam);
+		// this.bottom.addColor(colors, nextInSeam);
+		//this.bottom.left.addColor(colors, nextInSeam);
+		//this.bottom.right.addColor(colors, nextInSeam);
+		this.right.addColor(colors, nextInSeam);
+		this.left.addColor(colors, nextInSeam);
+
+		this.color = this.averageColor(colors);
+	}
+
+	// estimates the color of this pixel by looking at the top and bottom
+	// neighbors, but only if this is biased
+	// EFFECT: changes this.color to the estimated color
+	@Override
+	void estimateColorHorizontally(APixel nextInSeam) {
+
+		if (!this.biased) {
+			return;
+		}
+
+		this.biased = false;
 
 		ArrayList<Color> colors = new ArrayList<Color>();
 
 		this.top.addColor(colors, nextInSeam);
-		this.top.left.addColor(colors, nextInSeam);
-		this.top.right.addColor(colors, nextInSeam);
+		//this.top.left.addColor(colors, nextInSeam);
+		//this.top.right.addColor(colors, nextInSeam);
 		this.bottom.addColor(colors, nextInSeam);
-		this.bottom.left.addColor(colors, nextInSeam);
-		this.bottom.right.addColor(colors, nextInSeam);
-		this.right.addColor(colors, nextInSeam);
-		this.left.addColor(colors, nextInSeam);
+		//this.bottom.left.addColor(colors, nextInSeam);
+		//this.bottom.right.addColor(colors, nextInSeam);
+		// this.right.addColor(colors, nextInSeam);
+		// this.left.addColor(colors, nextInSeam);
 
+		this.color = this.averageColor(colors);
+	}
+	// gets the average color of the array list of colors
+	Color averageColor(ArrayList<Color> colors) {
 		int r = 0;
 		int g = 0;
 		int b = 0;
 
 		for (Color color : colors) {
-
 			r += color.getRed() * 255;
 			g += color.getGreen() * 255;
 			b += color.getBlue() * 255;
-
 		}
 
 		r /= colors.size();
 		g /= colors.size();
 		b /= colors.size();
 
-		this.color = Color.rgb(r, g, b);
-
+		return Color.rgb(r, g, b);
 	}
 
 	// adds this pixels color to the array list if it isn't equal to ignore

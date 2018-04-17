@@ -46,16 +46,7 @@ abstract class ASeamInfo {
 	// estimates the color for each pixel in this seam without looking at the
 	// actual pixel colors
 	// EFFECT: changes the color of each pixel in this seam to an estimate
-	void estimateColor() {
-
-		if (this.cameFrom != null) {
-			this.pixel.estimateColor(this.cameFrom.pixel);
-			this.cameFrom.estimateColor();
-		} else {
-			this.pixel.estimateColor(null);
-		}
-
-	}
+	abstract void estimateColor();
 
 	// reinserts this seam into the image
 	// ACCUMULATOR: start is the first pixel in this seam

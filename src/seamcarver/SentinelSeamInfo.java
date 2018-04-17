@@ -13,6 +13,12 @@ class SentinelSeamInfo extends ASeamInfo {
 
 	}
 
+	// this is a sentinel seam info, no colors to estimate here
+	@Override
+	void estimateColor() {
+
+	}
+
 	// since this is a sentinel seam info, it should have no impact on the
 	// images width
 	@Override

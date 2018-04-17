@@ -22,6 +22,17 @@ class VerticalSeamInfo extends ASeamInfo {
 			this.pixel.removeVertically(null, start);
 		}
 	}
+	
+	// estimates the color for each pixel using its left and right pixels
+	// EFFECT: changes the color of each pixel in this seam to an estimate
+	void estimateColor() {
+		if (this.cameFrom != null) {
+			this.pixel.estimateColorVertically(this.cameFrom.pixel);
+			this.cameFrom.estimateColor();
+		} else {
+			this.pixel.estimateColorVertically(null);
+		}
+	}
 
 	// since this is a vertical seam, it has a width of 1
 	@Override

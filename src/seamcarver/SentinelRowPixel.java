@@ -1,9 +1,5 @@
 package seamcarver;
 
-import java.util.ArrayList;
-
-import javafx.scene.paint.Color;
-
 // represents a sentinel pixel on a row
 class SentinelRowPixel extends ASentinelPixel {
 

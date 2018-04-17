@@ -27,18 +27,23 @@ abstract class APixel {
 
 	// biases this pixels energy
 	abstract void bias();
-	
+
 	// removes bias from this pixel
 	abstract void unbias();
 
 	// gets the color of this pixel
 	abstract Color color();
-	
-	// estimates the color of this pixel
+
+	// estimates the color of this pixel using left and right neighbors
 	// EFFECT: changes the color of this pixel to an estimate
-	abstract void estimateColor(APixel nextInSeam);
-	
-	// adds this pixels color to the given array list, if it isn't equal to ignore
+	abstract void estimateColorVertically(APixel nextInSeam);
+
+	// estimates the color of this pixel using left and right neighbors
+	// EFFECT: changes the color of this pixel to an estimate
+	abstract void estimateColorHorizontally(APixel nextInSeam);
+
+	// adds this pixels color to the given array list, if it isn't equal to
+	// ignore
 	// EFFECT: adds the pixel color, if it has one, to the array list
 	abstract void addColor(ArrayList<Color> colors, APixel ignore);
 

@@ -359,7 +359,7 @@ public class SeamCarverApp extends Application {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Choose Image");
 		fileChooser.getExtensionFilters()
-				.add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp"));
+				.add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.jpeg", "*.bmp"));
 		File imageFile = fileChooser.showOpenDialog(stage);
 
 		if (imageFile == null) {

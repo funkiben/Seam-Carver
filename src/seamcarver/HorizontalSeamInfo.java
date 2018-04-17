@@ -23,6 +23,17 @@ class HorizontalSeamInfo extends ASeamInfo {
 		}
 	}
 
+	// estimates the color for each pixel using its top and bottom pixels
+	// EFFECT: changes the color of each pixel in this seam to an estimate
+	void estimateColor() {
+		if (this.cameFrom != null) {
+			this.pixel.estimateColorHorizontally(this.cameFrom.pixel);
+			this.cameFrom.estimateColor();
+		} else {
+			this.pixel.estimateColorHorizontally(null);
+		}
+	}
+
 	// since this is a horizontal seam, it has a width of 0
 	@Override
 	int width() {

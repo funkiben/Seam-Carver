@@ -51,17 +51,23 @@ abstract class ASentinelPixel extends APixel {
 	void unbias() {
 
 	}
-	
+
 	// since this is a sentinel pixel, there is no color of estimate
 	@Override
-	void estimateColor(APixel nextInSeam) {
-		
+	void estimateColorVertically(APixel nextInSeam) {
+
 	}
-	
+
+	// since this is a sentinel pixel, there is no color of estimate
+	@Override
+	void estimateColorHorizontally(APixel nextInSeam) {
+
+	}
+
 	// this is a sentinel pixel, which has no color
 	@Override
 	void addColor(ArrayList<Color> colors, APixel ignore) {
-		
+
 	}
 
 	// sentinels are assumed to be black, so returns the color black
