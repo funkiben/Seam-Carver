@@ -14,6 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -320,6 +321,8 @@ public class SeamCarverApp extends Application {
 		this.image = imageView.imageProperty();
 
 		container.getChildren().addAll(imageView, this.getBiasImageView(imageView));
+		
+		container.setCursor(Cursor.CROSSHAIR);
 
 		return container;
 	}
@@ -337,7 +340,10 @@ public class SeamCarverApp extends Application {
 		biasImageView.fitHeightProperty().bind(imageView.fitHeightProperty());
 
 		imageView.setOnMouseDragged((e) -> {
-			this.drawBiasStroke((int) e.getX(), (int) e.getY());
+			double scaleX = this.biasImage.get().getWidth() / biasImageView.getFitWidth();
+			double scaleY = this.biasImage.get().getHeight() / biasImageView.getFitHeight();
+			double scale = Math.max(scaleX, scaleY);
+			this.drawBiasStroke((int) (e.getX() * scale), (int) (e.getY() * scale));
 		});
 
 		imageView.setOnMouseReleased((e) -> {
@@ -358,8 +364,8 @@ public class SeamCarverApp extends Application {
 	Image getImage(Stage stage) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Choose Image");
-		fileChooser.getExtensionFilters()
-				.add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.jpeg", "*.bmp"));
+		fileChooser.getExtensionFilters().add(
+				new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.jpeg", "*.bmp"));
 		File imageFile = fileChooser.showOpenDialog(stage);
 
 		if (imageFile == null) {
