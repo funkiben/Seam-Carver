@@ -1,7 +1,6 @@
 package seamcarver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
