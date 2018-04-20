@@ -87,7 +87,7 @@ public class SeamCarverController {
 	// EFFECT: this.imageView's fit and height properties
 	@FXML
 	void initialize() {
-
+		
 		ObservableList<String> options = FXCollections.observableArrayList(
 				ORIGINAL_COLOR_REINSERTION_MODE, ESTIMATE_COLOR_REINSERTION_MODE);
 
