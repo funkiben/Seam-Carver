@@ -46,19 +46,10 @@ class Pixel extends APixel {
 	void setColor(PixelWriter pixelWriter, int x, int y) {
 		pixelWriter.setColor(x, y, this.biased ? this.color.invert() : this.color);
 	}
-
-	// uses neighbors average colors to predict this pixels color if
-	// estimateColor is true
-	// EFFECT: changes this.biased to false
-	@Override
-	void reinsert(APixel start) {
-		super.reinsert(start);
-
-	}
-
+	
 	// estimates the color of this pixel by looking at the colors left and right
 	// neighbors, but only if this is biased
-	// EFFECT: changes this.color to the estimated color
+	// EFFECT: changes this.color to the estimated color, and unbiases the pixel if its biased
 	@Override
 	void estimateColorVertically(APixel nextInSeam) {
 
