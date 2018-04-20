@@ -26,6 +26,7 @@
 					<content>
 						<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
 							<children>
+                        <Button maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" mnemonicParsing="false" onAction="#saveCarvedImage" text="Save" />
 								<Button maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" mnemonicParsing="false" onAction="#revertToOriginal" text="Revert to Original" />
 								<Text strokeType="OUTSIDE" strokeWidth="0.0" text="Shrinking">
 									<font>

@@ -1,10 +1,15 @@
 package controller;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
@@ -14,6 +19,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import model.PixelBiasModel;
 import model.SeamCarverModel;
 
@@ -132,19 +139,19 @@ public class SeamCarverController {
 
 	// applies bias to the stroked pixels
 	@FXML
-	void finishBiasStroke(MouseEvent event) {
+	void finishBiasStroke() {
 		this.pixelBiasModel.finishStroke();
 	}
 
 	// reinserts all seams that have been removed from the original image
 	@FXML
-	void reinsertAllSeams(ActionEvent event) {
+	void reinsertAllSeams() {
 		this.reinsertSeams(this.seamCarverModel.countRemovedSeams());
 	}
 
 	// reinserts some of the seams that have been removed
 	@FXML
-	void reinsertSeams(ActionEvent event) {
+	void reinsertSeams() {
 		int amount = Integer.parseInt(this.reinsertSeamsAmountField.getText());
 		this.reinsertSeams(amount);
 	}
@@ -159,19 +166,41 @@ public class SeamCarverController {
 
 	// removes all bias from all pixels
 	@FXML
-	void removeAllBias(ActionEvent event) {
+	void removeAllBias() {
 		this.pixelBiasModel.removeAllBias();
 	}
 
 	// reverts the image back to the original image
 	@FXML
-	void revertToOriginal(ActionEvent event) {
+	void revertToOriginal() {
 		this.seamCarverModel.revertToOriginal();
+	}
+
+	// saves the carved image
+	@FXML
+	void saveCarvedImage() {
+
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Save Image");
+		fileChooser.getExtensionFilters().addAll(new ExtensionFilter("png", "*.png"),
+				new ExtensionFilter("gif", "*.gif"), new ExtensionFilter("jpg", "*.jpg", "*.jpeg"));
+
+		File file = fileChooser.showSaveDialog(this.controlPanel.getScene().getWindow());
+
+		Image image = this.imageView.getImage();
+
+		try {
+			ImageIO.write(SwingFXUtils.fromFXImage(image, null),
+					fileChooser.getSelectedExtensionFilter().getDescription(), file);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	// removes horizontal seams
 	@FXML
-	void shrinkHorizontally(ActionEvent event) {
+	void shrinkHorizontally() {
 		int amount = Integer.parseInt(this.horizontalShrinkAmountField.getText());
 
 		this.seamCarverModel.removeHorizontalSeams(amount);
@@ -180,14 +209,14 @@ public class SeamCarverController {
 
 	// randomly removes either horizontal or vertical seams
 	@FXML
-	void shrinkRandomly(ActionEvent event) {
+	void shrinkRandomly() {
 		int amount = Integer.parseInt(this.randomShrinkAmountField.getText());
 		this.seamCarverModel.removeRandomSeams(amount);
 	}
 
 	// removes vertical seams
 	@FXML
-	void shrinkVertically(ActionEvent event) {
+	void shrinkVertically() {
 		int amount = Integer.parseInt(this.verticalShrinkAmountField.getText());
 
 		this.seamCarverModel.removeVerticalSeams(amount);
@@ -196,7 +225,7 @@ public class SeamCarverController {
 
 	// undos the last pixel bias stroke
 	@FXML
-	void undoLastBiasStroke(ActionEvent event) {
+	void undoLastBiasStroke() {
 		this.pixelBiasModel.undoLastStroke();
 	}
 
