@@ -22,7 +22,7 @@ class VerticalSeamInfo extends ASeamInfo {
 			this.pixel.removeVertically(null, start);
 		}
 	}
-	
+
 	// estimates the color for each pixel using its left and right pixels
 	// EFFECT: changes the color of each pixel in this seam to an estimate
 	void estimateColor() {

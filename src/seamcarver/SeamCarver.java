@@ -251,13 +251,13 @@ public class SeamCarver {
 		}
 
 		ASeamInfo seam = this.removedSeams.pop();
-		
+
 		seam.reinsert();
-		
+
 		if (estimateColor) {
 			seam.estimateColor();
 		}
-		
+
 		this.width += seam.width();
 		this.height += seam.height();
 

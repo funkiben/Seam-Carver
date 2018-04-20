@@ -1,4 +1,4 @@
- package seamcarver;
+package seamcarver;
 import java.util.ArrayList;
 import java.util.Iterator;
 

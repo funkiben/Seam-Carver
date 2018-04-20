@@ -46,10 +46,11 @@ class Pixel extends APixel {
 	void setColor(PixelWriter pixelWriter, int x, int y) {
 		pixelWriter.setColor(x, y, this.biased ? this.color.invert() : this.color);
 	}
-	
+
 	// estimates the color of this pixel by looking at the colors left and right
 	// neighbors, but only if this is biased
-	// EFFECT: changes this.color to the estimated color, and unbiases the pixel if its biased
+	// EFFECT: changes this.color to the estimated color, and unbiases the pixel
+	// if its biased
 	@Override
 	void estimateColorVertically(APixel nextInSeam) {
 
@@ -62,11 +63,11 @@ class Pixel extends APixel {
 		ArrayList<Color> colors = new ArrayList<Color>();
 
 		// this.top.addColor(colors, nextInSeam);
-		//this.top.left.addColor(colors, nextInSeam);
-		//this.top.right.addColor(colors, nextInSeam);
+		// this.top.left.addColor(colors, nextInSeam);
+		// this.top.right.addColor(colors, nextInSeam);
 		// this.bottom.addColor(colors, nextInSeam);
-		//this.bottom.left.addColor(colors, nextInSeam);
-		//this.bottom.right.addColor(colors, nextInSeam);
+		// this.bottom.left.addColor(colors, nextInSeam);
+		// this.bottom.right.addColor(colors, nextInSeam);
 		this.right.addColor(colors, nextInSeam);
 		this.left.addColor(colors, nextInSeam);
 
@@ -88,11 +89,11 @@ class Pixel extends APixel {
 		ArrayList<Color> colors = new ArrayList<Color>();
 
 		this.top.addColor(colors, nextInSeam);
-		//this.top.left.addColor(colors, nextInSeam);
-		//this.top.right.addColor(colors, nextInSeam);
+		// this.top.left.addColor(colors, nextInSeam);
+		// this.top.right.addColor(colors, nextInSeam);
 		this.bottom.addColor(colors, nextInSeam);
-		//this.bottom.left.addColor(colors, nextInSeam);
-		//this.bottom.right.addColor(colors, nextInSeam);
+		// this.bottom.left.addColor(colors, nextInSeam);
+		// this.bottom.right.addColor(colors, nextInSeam);
 		// this.right.addColor(colors, nextInSeam);
 		// this.left.addColor(colors, nextInSeam);
 

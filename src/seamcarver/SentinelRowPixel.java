@@ -34,7 +34,7 @@ class SentinelRowPixel extends ASentinelPixel {
 		super.reinsert(start);
 
 		if (this != start.bottom) {
-			
+
 			if (this.isRight(start.bottom)) {
 
 				for (APixel pixel : new PixelRowIterable(this)) {
@@ -42,7 +42,7 @@ class SentinelRowPixel extends ASentinelPixel {
 					if (pixel == start.bottom) {
 						break;
 					}
-					
+
 					pixel.top = pixel.top.right;
 					pixel.top.bottom = pixel;
 
@@ -55,10 +55,9 @@ class SentinelRowPixel extends ASentinelPixel {
 					if (pixel == this) {
 						break;
 					}
-					
+
 					pixel.top = pixel.top.left;
 					pixel.top.bottom = pixel;
-
 
 				}
 
@@ -67,6 +66,5 @@ class SentinelRowPixel extends ASentinelPixel {
 		}
 
 	}
-
 
 }
