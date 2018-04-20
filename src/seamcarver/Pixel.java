@@ -1,6 +1,7 @@
 package seamcarver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
@@ -62,12 +63,6 @@ class Pixel extends APixel {
 
 		ArrayList<Color> colors = new ArrayList<Color>();
 
-		// this.top.addColor(colors, nextInSeam);
-		// this.top.left.addColor(colors, nextInSeam);
-		// this.top.right.addColor(colors, nextInSeam);
-		// this.bottom.addColor(colors, nextInSeam);
-		// this.bottom.left.addColor(colors, nextInSeam);
-		// this.bottom.right.addColor(colors, nextInSeam);
 		this.right.addColor(colors, nextInSeam);
 		this.left.addColor(colors, nextInSeam);
 
@@ -89,16 +84,11 @@ class Pixel extends APixel {
 		ArrayList<Color> colors = new ArrayList<Color>();
 
 		this.top.addColor(colors, nextInSeam);
-		// this.top.left.addColor(colors, nextInSeam);
-		// this.top.right.addColor(colors, nextInSeam);
 		this.bottom.addColor(colors, nextInSeam);
-		// this.bottom.left.addColor(colors, nextInSeam);
-		// this.bottom.right.addColor(colors, nextInSeam);
-		// this.right.addColor(colors, nextInSeam);
-		// this.left.addColor(colors, nextInSeam);
 
 		this.color = this.averageColor(colors);
 	}
+
 	// gets the average color of the array list of colors
 	Color averageColor(ArrayList<Color> colors) {
 		int r = 0;
@@ -116,6 +106,12 @@ class Pixel extends APixel {
 		b /= colors.size();
 
 		return Color.rgb(r, g, b);
+	}
+
+	// gets a random color from the array list of colors
+	Color randomColor(ArrayList<Color> color) {
+		int i = (int) (Math.random() * color.size());
+		return color.get(i);
 	}
 
 	// adds this pixels color to the array list if it isn't equal to ignore
