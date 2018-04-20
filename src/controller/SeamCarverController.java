@@ -45,9 +45,6 @@ public class SeamCarverController {
 	private TextField horizontalShrinkAmountField;
 
 	@FXML
-	private TextField alternateShrinkIterationsField;
-
-	@FXML
 	private TextField randomShrinkAmountField;
 
 	@FXML
@@ -74,9 +71,6 @@ public class SeamCarverController {
 	@FXML
 	private Text totalSeamsText;
 
-	// used for alternating between vertical and horizontal seams
-	private int currentSeamOrientation = 0;
-
 	public SeamCarverController(Image image) {
 		this.seamCarverModel = new SeamCarverModel(image);
 		this.pixelBiasModel = new PixelBiasModel(this.seamCarverModel);
@@ -94,8 +88,7 @@ public class SeamCarverController {
 		this.reinsertionModeComboBox.setValue(ORIGINAL_COLOR_REINSERTION_MODE);
 
 		this.makeNumberField(this.verticalShrinkAmountField, this.horizontalShrinkAmountField,
-				this.alternateShrinkIterationsField, this.randomShrinkAmountField,
-				this.biasBrushSizeField);
+				this.randomShrinkAmountField, this.biasBrushSizeField);
 
 		this.imageView.fitWidthProperty().bind(this.display.widthProperty());
 		this.imageView.fitHeightProperty().bind(this.display.heightProperty());
@@ -161,14 +154,7 @@ public class SeamCarverController {
 		boolean estimateColor =
 				this.reinsertionModeComboBox.getValue().equals(ESTIMATE_COLOR_REINSERTION_MODE);
 
-		for (int i = 0; i < amount; i++) {
-
-			if (this.seamCarverModel.countRemovedSeams() == 0) {
-				break;
-			}
-
-			this.seamCarverModel.reinsertSeam(estimateColor);
-		}
+		this.seamCarverModel.reinsertSeam(amount, estimateColor);
 	}
 
 	// removes all bias from all pixels
@@ -183,44 +169,20 @@ public class SeamCarverController {
 		this.seamCarverModel.revertToOriginal();
 	}
 
-	// alternates between horizontal and vertical seams
-	@FXML
-	void shrinkAlternate(ActionEvent event) {
-		int amount = Integer.parseInt(this.alternateShrinkIterationsField.getText());
-
-		for (int count = 0; count < amount; count++) {
-			if (count % 2 == this.currentSeamOrientation) {
-				this.shrinkHorizontally(null);
-			} else {
-				this.shrinkVertically(null);
-			}
-		}
-
-		this.currentSeamOrientation = (this.currentSeamOrientation + amount) % 2;
-	}
-
 	// removes horizontal seams
 	@FXML
 	void shrinkHorizontally(ActionEvent event) {
 		int amount = Integer.parseInt(this.horizontalShrinkAmountField.getText());
 
-		for (int count = 0; count < amount; count++) {
-			this.seamCarverModel.removeHorizontalSeam();
-		}
+		this.seamCarverModel.removeHorizontalSeams(amount);
+
 	}
 
 	// randomly removes either horizontal or vertical seams
 	@FXML
 	void shrinkRandomly(ActionEvent event) {
 		int amount = Integer.parseInt(this.randomShrinkAmountField.getText());
-
-		for (int count = 0; count < amount; count++) {
-			if (Math.random() < 0.5) {
-				this.seamCarverModel.removeHorizontalSeam();
-			} else {
-				this.seamCarverModel.removeVerticalSeam();
-			}
-		}
+		this.seamCarverModel.removeRandomSeams(amount);
 	}
 
 	// removes vertical seams
@@ -228,9 +190,8 @@ public class SeamCarverController {
 	void shrinkVertically(ActionEvent event) {
 		int amount = Integer.parseInt(this.verticalShrinkAmountField.getText());
 
-		for (int count = 0; count < amount; count++) {
-			this.seamCarverModel.removeVerticalSeam();
-		}
+		this.seamCarverModel.removeVerticalSeams(amount);
+
 	}
 
 	// undos the last pixel bias stroke

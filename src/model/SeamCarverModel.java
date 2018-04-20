@@ -65,24 +65,70 @@ public class SeamCarverModel {
 		this.updateImage();
 	}
 
-	// reinserts the seam, either using original color or esimated color
+	// reinserts some seams, either using original color or an estimated color
 	// EFFECT: this.seamCarver, this.imageProperty
-	public void reinsertSeam(boolean estimateColor) {
-		this.seamCarver.reinsertSeam(estimateColor);
+	public void reinsertSeam(int amount, boolean estimateColor) {
+		for (int i = 0; i < amount; i++) {
+
+			if (this.countRemovedSeams() == 0) {
+				break;
+			}
+
+			this.seamCarver.reinsertSeam(estimateColor);
+
+		}
+
 		this.updateImage();
 	}
 
-	// removes a vertical seam from the carved image
+	// removes some vertical seams from the carved image
 	// EFFECT: this.seamCarver, this.imageProperty
-	public void removeVerticalSeam() {
-		this.seamCarver.removeVerticalSeam();
+	public void removeVerticalSeams(int amount) {
+		for (int i = 0; i < amount; i++) {
+
+			if (this.getWidth() == 1) {
+				break;
+			}
+
+			this.seamCarver.removeVerticalSeam();
+
+		}
+
 		this.updateImage();
 	}
 
-	// removes a vertical seam from the carved image
+	// removes some horizontal seams from the carved image
 	// EFFECT: this.seamCarver, this.imageProperty
-	public void removeHorizontalSeam() {
-		this.seamCarver.removeHorizontalSeam();
+	public void removeHorizontalSeams(int amount) {
+		for (int i = 0; i < amount; i++) {
+
+			if (this.getHeight() == 1) {
+				break;
+			}
+
+			this.seamCarver.removeHorizontalSeam();
+
+		}
+
+		this.updateImage();
+	}
+
+	// removes horizontal and vertical seams randomly
+	// EFFECT: this.seamCarver, this.imageProperty
+	public void removeRandomSeams(int amount) {
+		for (int i = 0; i < amount; i++) {
+
+			if (this.getHeight() == 1 || this.getWidth() == 1) {
+				break;
+			}
+
+			if (Math.random() < 0.5) {
+				this.seamCarver.removeHorizontalSeam();
+			} else {
+				this.seamCarver.removeVerticalSeam();
+			}
+		}
+
 		this.updateImage();
 	}
 
