@@ -81,7 +81,7 @@ public class SeamCarver {
 			}
 
 		}
-		
+
 		this.testStructuralIntegrity();
 
 	}
@@ -125,12 +125,25 @@ public class SeamCarver {
 	}
 
 	// biases all pixels with the given coordinates
-	public void biasPixels(Collection<Point2D> points) {
+	public void biasForPixels(Collection<Point2D> points) {
 
 		this.coordIterate((pixel, x, y) -> {
 
 			if (points.contains(new Point2D(x, y))) {
-				pixel.bias();
+				pixel.biasFor();
+			}
+
+		});
+
+	}
+
+	// makes all pixels avoided
+	public void biasAgainstPixels(Collection<Point2D> points) {
+
+		this.coordIterate((pixel, x, y) -> {
+
+			if (points.contains(new Point2D(x, y))) {
+				pixel.biasAgainst();
 			}
 
 		});
@@ -152,46 +165,6 @@ public class SeamCarver {
 
 	// unbiases all pixels
 	public void unbiasAllPixels() {
-
-		for (LeftBorderPixel row : this.topLeft.rows()) {
-
-			for (ColoredPixel pixel : row.rowIterable()) {
-
-				pixel.unbias();
-
-			}
-
-		}
-	}
-
-	// makes all pixels avoided
-	public void avoidPixels(Collection<Point2D> points) {
-
-		this.coordIterate((pixel, x, y) -> {
-
-			if (points.contains(new Point2D(x, y))) {
-				pixel.avoid();
-			}
-
-		});
-
-	}
-
-	// unavoids all pixels with the given coordinates
-	public void unavoidPixel(Collection<Point2D> points) {
-
-		this.coordIterate((pixel, x, y) -> {
-
-			if (points.contains(new Point2D(x, y))) {
-				pixel.unavoid();
-			}
-
-		});
-
-	}
-
-	// unavoids all pixels
-	public void unavoidAllPixels() {
 
 		for (LeftBorderPixel row : this.topLeft.rows()) {
 
@@ -339,19 +312,19 @@ public class SeamCarver {
 		}
 
 		this.fixBrokenVerticalLinks();
-		
+
 		this.testStructuralIntegrity();
 
 		this.width += amount;
 
 		this.operations.push(() -> {
-			
+
 			while (!newSeams.isEmpty()) {
 				newSeams.pop().removeDontFixLinks();
 			}
-			
+
 			this.fixBrokenVerticalLinks();
-			
+
 			this.width -= amount;
 
 		});
@@ -389,13 +362,13 @@ public class SeamCarver {
 		this.height += amount;
 
 		this.operations.push(() -> {
-			
+
 			while (!newSeams.isEmpty()) {
 				newSeams.pop().removeDontFixLinks();
 			}
-			
+
 			this.fixBrokenHorizontalLinks();
-			
+
 			this.height -= amount;
 
 		});

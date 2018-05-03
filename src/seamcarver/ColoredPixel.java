@@ -13,8 +13,10 @@ class ColoredPixel extends APixel {
 
 	private Color color;
 	private IPixel right, left, top, bottom;
-	private boolean biased = false;
-	private boolean avoid = false;
+
+	// either -1, 0, or 1: -1 is biased for, 1 is biased against, 0 is no bias
+	private int bias = 0;
+
 	private boolean highlight = false;
 
 	private final VerticalSeamInfo vSeamInfo;
@@ -35,27 +37,20 @@ class ColoredPixel extends APixel {
 
 	// baises this pixel
 	// pixels can't be biased and avoided simultaneously
-	void bias() {
-		this.biased = true;
-		this.avoid = false;
+	void biasFor() {
+		this.bias = -1;
 	}
 
 	// unbiased this pixel
 	void unbias() {
-		this.biased = false;
+		this.bias = 0;
 	}
 
 	// makes it so this pixel is avoided by adding a large amount to this pixels
 	// energy
 	// pixels can't be biased and avoided simultaneously
-	void avoid() {
-		this.avoid = true;
-		this.biased = false;
-	}
-
-	// makes it so this pixel is no longer avoided
-	void unavoid() {
-		this.avoid = false;
+	void biasAgainst() {
+		this.bias = 1;
 	}
 
 	// shows this pixel by coloring it red
@@ -73,9 +68,9 @@ class ColoredPixel extends APixel {
 
 		if (this.highlight) {
 			pixelWriter.setColor(x, y, this.color.invert());
-		} else if (this.biased) {
+		} else if (this.bias == -1) {
 			pixelWriter.setColor(x, y, this.addGreenTintToColor());
-		} else if (this.avoid) {
+		} else if (this.bias == 1) {
 			pixelWriter.setColor(x, y, this.addRedTintToColor());
 		} else {
 			pixelWriter.setColor(x, y, this.color);
@@ -147,8 +142,7 @@ class ColoredPixel extends APixel {
 		double hEnergy = this.left.verticalBrightnessSum() - this.right.verticalBrightnessSum();
 
 		return Math.sqrt(Math.pow(vEnergy, 2) + Math.pow(hEnergy, 2))
-				+ (this.biased ? -LARGE_ENERGY_AMOUNT : 0.0)
-				+ (this.avoid ? LARGE_ENERGY_AMOUNT : 0.0);
+				+ this.bias * LARGE_ENERGY_AMOUNT;
 
 	}
 

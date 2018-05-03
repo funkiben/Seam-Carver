@@ -1,10 +1,8 @@
 package model;
 
-import java.util.Collection;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import seamcarver.SeamCarver;
 
@@ -46,27 +44,6 @@ public class SeamCarverModel {
 		this.updateImage();
 	}
 
-	// biases the given pixels
-	// EFFECT: this.seamCarver
-	void biasPixels(Collection<Point2D> points) {
-		this.seamCarver.biasPixels(points);
-		this.updateImage();
-	}
-
-	// unbiases the given pixels
-	// EFFECT: this.seamCarver
-	void unbiasPixels(Collection<Point2D> points) {
-		this.seamCarver.unbiasPixels(points);
-		this.updateImage();
-	}
-
-	// unbiases all pixels
-	// EFFECT: this.seamCarver
-	void unbiasAllPixels() {
-		this.seamCarver.unbiasAllPixels();
-		this.updateImage();
-	}
-
 	// removes some vertical seams from the carved image
 	// EFFECT: this.seamCarver, this.imageProperty
 	public void shrinkVertically(int amount) {
@@ -90,7 +67,7 @@ public class SeamCarverModel {
 		this.updateImage();
 
 	}
-	
+
 	// fabricates artificial horizontal seams to expand the image vertically
 	public void expandVertically(int amount) {
 
@@ -120,7 +97,7 @@ public class SeamCarverModel {
 			this.updateImage();
 		});
 	}
-	
+
 	// gets the width of the current carved image
 	public int getWidth() {
 		return this.seamCarver.getWidth();
@@ -129,6 +106,21 @@ public class SeamCarverModel {
 	// gets the height of the current carved image
 	public int getHeight() {
 		return this.seamCarver.getHeight();
+	}
+
+	// gets the width of the current carved image
+	public int getOriginalWidth() {
+		return (int) this.originalImage.getWidth();
+	}
+
+	// gets the height of the current carved image
+	public int getOriginalHeight() {
+		return (int) this.originalImage.getHeight();
+	}
+	
+	// gets the underlying seam carver object
+	SeamCarver getSeamCarver() {
+		return this.seamCarver;
 	}
 
 }

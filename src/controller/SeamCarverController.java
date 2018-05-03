@@ -7,9 +7,12 @@ import javax.imageio.ImageIO;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -19,8 +22,15 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import model.PixelBiasModel;
+import model.BiasAgainstBrushMode;
+import model.BiasForBrushMode;
+import model.CircleBrushShape;
+import model.EraseBiasBrushMode;
+import model.IBrushMode;
+import model.IBrushShape;
+import model.PixelBrushModel;
 import model.SeamCarverModel;
+import model.SquareBrushShape;
 import model.UndoManager;
 
 // the controller for the seam carver app
@@ -28,7 +38,7 @@ public class SeamCarverController {
 
 	private final UndoManager undoManager = new UndoManager();
 	private final SeamCarverModel seamCarverModel;
-	private final PixelBiasModel pixelBiasModel;
+	private final PixelBrushModel pixelBrushModel;
 
 	@FXML
 	private ScrollPane controlPanel;
@@ -55,6 +65,9 @@ public class SeamCarverController {
 	private Text carvedDimensionsText;
 
 	@FXML
+	private Text deltaDimensionsText;
+
+	@FXML
 	private StackPane display;
 
 	@FXML
@@ -66,9 +79,15 @@ public class SeamCarverController {
 	@FXML
 	private Button undoButton;
 
+	@FXML
+	private ComboBox<IBrushShape> brushShapeComboBox;
+
+	@FXML
+	private ComboBox<IBrushMode> brushModeComboBox;
+
 	public SeamCarverController(Image image) {
 		this.seamCarverModel = new SeamCarverModel(image, undoManager);
-		this.pixelBiasModel = new PixelBiasModel(this.seamCarverModel, undoManager);
+		this.pixelBrushModel = new PixelBrushModel(this.seamCarverModel, undoManager);
 	}
 
 	// initializes the display controller
@@ -77,6 +96,22 @@ public class SeamCarverController {
 	void initialize() {
 
 		this.undoManager.bindToNextOpName(this.undoButton.textProperty());
+
+		IBrushShape defShape;
+		ObservableList<IBrushShape> brushShapes = FXCollections
+				.observableArrayList(defShape = new CircleBrushShape(), new SquareBrushShape());
+		this.brushShapeComboBox.setItems(brushShapes);
+
+		this.brushShapeComboBox.setValue(defShape);
+
+		IBrushMode defMode;
+
+		ObservableList<IBrushMode> brushModes =
+				FXCollections.observableArrayList(defMode = new BiasForBrushMode(),
+						new BiasAgainstBrushMode(), new EraseBiasBrushMode());
+		this.brushModeComboBox.setItems(brushModes);
+
+		this.brushModeComboBox.setValue(defMode);
 
 		this.makeNumberField(this.verticalShrinkAmountField, this.horizontalShrinkAmountField,
 				this.verticalExpandAmountField, this.horizontalExpandAmountField,
@@ -89,10 +124,10 @@ public class SeamCarverController {
 		this.pixelBiasImageView.fitHeightProperty().bind(this.display.heightProperty());
 
 		this.seamCarverModel.bindToCarvedImage(this.imageView.imageProperty());
-		this.pixelBiasModel.bindToCanvas(this.pixelBiasImageView.imageProperty());
+		this.pixelBrushModel.bindToCanvas(this.pixelBiasImageView.imageProperty());
 
 		this.imageView.imageProperty()
-				.addListener((obs, newValue, oldValue) -> this.pixelBiasModel.makeNewCanvas());
+				.addListener((obs, newValue, oldValue) -> this.pixelBrushModel.makeNewCanvas());
 		this.imageView.imageProperty()
 				.addListener((obs, newValue, oldValue) -> this.updateStatusText());
 
@@ -130,27 +165,34 @@ public class SeamCarverController {
 		int x = (int) (event.getX() * scale);
 		int y = (int) (event.getY() * scale);
 
-		int brushSize = Integer.parseInt(this.biasBrushSizeField.getText());
-
-		this.pixelBiasModel.addStroke(x, y, brushSize);
+		this.pixelBrushModel.addToCurrentStroke(x, y);
 
 	}
 
 	// applies bias to the stroked pixels
 	@FXML
 	void finishBiasStroke() {
-		this.pixelBiasModel.finishStroke();
+		this.pixelBrushModel.finishStroke();
+	}
+
+	@FXML
+	void startStroke() {
+		int brushSize = Integer.parseInt(this.biasBrushSizeField.getText());
+
+		this.pixelBrushModel.startStroke(brushSize, this.brushShapeComboBox.getValue(),
+				this.brushModeComboBox.getValue());
 	}
 
 	// removes all bias from all pixels
 	@FXML
 	void removeAllBias() {
-		this.pixelBiasModel.removeAllBias();
+		this.pixelBrushModel.removeAllBias();
 	}
 
 	// reverts the image back to the original image
 	@FXML
 	void revertToOriginal() {
+		this.pixelBrushModel.clearStrokes();
 		this.seamCarverModel.revertToOriginal();
 		this.undoManager.clear();
 	}
@@ -209,16 +251,27 @@ public class SeamCarverController {
 	// sets the original dimensions text, assumes the image has not been carved
 	// yet
 	private void setOriginalDimenionsText() {
-		Image img = this.imageView.getImage();
 
-		this.originalDimensionsText.setText((int) img.getWidth() + "x" + (int) img.getHeight());
+		int w = this.seamCarverModel.getOriginalWidth();
+		int h = this.seamCarverModel.getOriginalHeight();
+
+		this.originalDimensionsText.setText(w + "x" + h);
+
 	}
 
 	// sets all the status text
 	private void updateStatusText() {
-		Image img = this.imageView.getImage();
 
-		this.carvedDimensionsText.setText((int) img.getWidth() + "x" + (int) img.getHeight());
+		int w = this.seamCarverModel.getWidth();
+		int h = this.seamCarverModel.getHeight();
+
+		this.carvedDimensionsText.setText(w + "x" + h);
+
+		int dw = w - this.seamCarverModel.getOriginalWidth();
+		int dh = h - this.seamCarverModel.getOriginalHeight();
+
+		this.deltaDimensionsText.setText(dw + "x" + dh);
+
 	}
 
 	// makes the given textFields accept only numbers
