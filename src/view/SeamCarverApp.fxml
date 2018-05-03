@@ -73,7 +73,7 @@
                               <TextField fx:id="horizontalExpandAmountField" promptText="# Seams" text="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
-								<Text layoutX="15.0" layoutY="72.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Pixel Bias Brush">
+								<Text layoutX="15.0" layoutY="72.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Pixel Brush">
 									<font>
 										<Font name="Verdana Bold" size="20.0" />
 									</font>
@@ -83,8 +83,8 @@
 								</Text>
                         <GridPane>
                           <columnConstraints>
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="89.0" minWidth="10.0" prefWidth="81.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="128.0" minWidth="10.0" prefWidth="107.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="91.0" minWidth="10.0" prefWidth="66.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="128.0" minWidth="10.0" prefWidth="122.0" />
                           </columnConstraints>
                           <rowConstraints>
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -92,12 +92,12 @@
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Brush Shape" GridPane.rowIndex="1" />
-										<Text strokeType="OUTSIDE" strokeWidth="0.0" text="Brush Size" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Shape" GridPane.rowIndex="1" />
+										<Text strokeType="OUTSIDE" strokeWidth="0.0" text="Size" />
 										<TextField fx:id="biasBrushSizeField" maxWidth="1.7976931348623157E308" promptText="# pixels" text="5" GridPane.columnIndex="1" />
                               <ComboBox fx:id="brushShapeComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <ComboBox fx:id="brushModeComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Brush Mode" GridPane.rowIndex="2" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Mode" GridPane.rowIndex="2" />
                            </children>
                         </GridPane>
 								<Button layoutX="15.0" layoutY="259.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" mnemonicParsing="false" onAction="#removeAllBias" text="Clear All Bias" />

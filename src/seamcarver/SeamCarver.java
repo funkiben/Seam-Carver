@@ -82,8 +82,6 @@ public class SeamCarver {
 
 		}
 
-		this.testStructuralIntegrity();
-
 	}
 
 	// undos the last operation done on the image
@@ -312,9 +310,7 @@ public class SeamCarver {
 		}
 
 		this.fixBrokenVerticalLinks();
-
-		this.testStructuralIntegrity();
-
+		
 		this.width += amount;
 
 		this.operations.push(() -> {
