@@ -64,9 +64,9 @@ public class PixelBrushModel {
 		Iterator<BrushStroke> revItr = this.strokes.descendingIterator();
 
 		// this isnt great...
-		while (revItr.hasNext()) {
-			revItr.next().finish(this.seamCarverModel.getSeamCarver());
-		}
+		// while (revItr.hasNext()) {
+		// revItr.next().finish(this.seamCarverModel.getSeamCarver());
+		// }
 
 		this.seamCarverModel.updateImage();
 
