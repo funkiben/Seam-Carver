@@ -1,49 +1,101 @@
 package seamcarver;
 
-// represents a vertical seam info
-class VerticalSeamInfo extends ASeamInfo {
+import java.util.ArrayList;
+import java.util.Iterator;
 
-	VerticalSeamInfo(APixel pixel, double energy) {
-		super(pixel, energy);
+// the body of a vertical seam
+class VerticalSeamInfo extends AVerticalSeamInfo {
+
+	private final ColoredPixel pixel;
+	// null until calculuated
+	private AVerticalSeamInfo cameFrom = null;
+
+	VerticalSeamInfo(ColoredPixel pixel) {
+		this.pixel = pixel;
+	}
+	
+	private VerticalSeamInfo(ColoredPixel pixel, double energy, AVerticalSeamInfo cameFrom) {
+		this(pixel);
+
+		this.energy = energy;
+		this.cameFrom = cameFrom;
+
 	}
 
-	VerticalSeamInfo(APixel pixel, ASeamInfo parent1, ASeamInfo parent2, ASeamInfo parent3) {
-		super(pixel, parent1, parent2, parent3);
+	void calculate(ArrayList<AVerticalSeamInfo> parents) {
+		this.cameFrom = ASeamInfo.lowestEnergy(parents);
+		this.energy = this.pixel.energy() + this.cameFrom.energy;
 	}
 
-	// removes the seam vertically, remembers the first pixel on this seam
-	// ACCUMULATOR: remembers the start of this seam
 	@Override
-	void remove(APixel start) {
-		if (this.cameFrom != null) {
-			this.pixel.removeVertically(this.cameFrom.pixel, start);
-			this.cameFrom.remove(start);
-		} else {
-			this.pixel.removeVertically(null, start);
+	public void reinsert() {
+		this.pixel.reinsert();
+		this.cameFrom.reinsert();
+	}
+
+	@Override
+	public void remove() {
+		this.pixel.removeFromVerticalSeam(this.cameFrom.pixel());
+		this.cameFrom.remove();
+	}
+
+	@Override
+	public void removeDontFixLinks() {
+		this.pixel.removeFromVerticalSeam();
+		this.cameFrom.removeDontFixLinks();
+	}
+
+	@Override
+	public VerticalSeamInfo duplicate() {
+		AVerticalSeamInfo cameFromDupe = this.cameFrom.duplicate();
+
+		ColoredPixel newPixel =
+				this.pixel.duplicateToLeft(cameFromDupe.pixel(), this.cameFrom.pixel());
+
+		return new VerticalSeamInfo(newPixel, this.energy, cameFromDupe);
+	}
+
+	@Override
+	public VerticalSeamInfo duplicateDontFixLinks() {
+		AVerticalSeamInfo cameFromDupe = this.cameFrom.duplicateDontFixLinks();
+
+		ColoredPixel newPixel = this.pixel.duplicateToLeft();
+
+		return new VerticalSeamInfo(newPixel, this.energy, cameFromDupe);
+	}
+
+	@Override
+	ColoredPixel pixel() {
+		return this.pixel;
+	}
+
+	@Override
+	public Iterator<ColoredPixel> iterator() {
+		return new VerticalSeamIterator();
+	}
+
+	@Override
+	VerticalSeamInfo asVerticalSeamInfo() {
+		return this;
+	}
+
+	// iterator over all pixels in this seam info and all seam infos before this
+	class VerticalSeamIterator implements Iterator<ColoredPixel> {
+
+		// will equal null when there's nothing left of the seam
+		private VerticalSeamInfo current = VerticalSeamInfo.this;
+
+		@Override
+		public boolean hasNext() {
+			return current != null;
 		}
-	}
 
-	// estimates the color for each pixel using its left and right pixels
-	// EFFECT: changes the color of each pixel in this seam to an estimate
-	void estimateColor() {
-		if (this.cameFrom != null) {
-			this.pixel.estimateColorVertically(this.cameFrom.pixel);
-			this.cameFrom.estimateColor();
-		} else {
-			this.pixel.estimateColorVertically(null);
+		@Override
+		public ColoredPixel next() {
+			ColoredPixel temp = this.current.pixel;
+			this.current = this.current.cameFrom.asVerticalSeamInfo();
+			return temp;
 		}
-	}
 
-	// since this is a vertical seam, it has a width of 1
-	@Override
-	int width() {
-		return 1;
 	}
-
-	// since this is a vertical seam, it has a height of 0
-	@Override
-	int height() {
-		return 0;
-	}
-
 }

@@ -1,6 +1,6 @@
 # Seam-Carver
 A program for image content-aware resizing using the seam carving algorithm. 
 
-Can be used for both resizing, and for removing sections of images.
+Can also be used for removing sections of images in addition to resizing.
 
 Comes with a basic JavaFX GUI for using the algorithm.

@@ -1,84 +1,45 @@
 package seamcarver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 
-// represents a linked-list for seams
-abstract class ASeamInfo {
+// abstract class for seam infos
+abstract class ASeamInfo implements ISeam, Comparable<ASeamInfo>  {
 
-	final APixel pixel;
-	final double energy;
-	// cameFrom may be null if no seam info came before this
-	final ASeamInfo cameFrom;
+	// returns the seam info with the lowest energy
+	static <T extends ASeamInfo> T lowestEnergy(ArrayList<T> seamInfos) {
+		seamInfos.sort((a, b) -> a.compareTo(b));
 
-	// creates a seam info on the edge of the image, has no parent
-	ASeamInfo(APixel pixel, double energy) {
-
-		this.pixel = pixel;
-		this.energy = energy;
-		this.cameFrom = null;
-
+		return seamInfos.get(0);
 	}
 
-	// creates a seam info given a pixel and three parents, uses the cheapest
-	// parent to construct this
-	ASeamInfo(APixel pixel, ASeamInfo parent1, ASeamInfo parent2, ASeamInfo parent3) {
+	// may be mutated when ever seams are calculated
+	double energy = 0.0;
 
-		ArrayList<ASeamInfo> parents =
-				new ArrayList<ASeamInfo>(Arrays.asList(parent1, parent2, parent3));
-		parents.sort((a, b) -> a.compare(b));
+	// ugh a getter
+	abstract IPixel pixel();
 
-		this.pixel = pixel;
-		this.cameFrom = parents.get(0);
-		this.energy = this.cameFrom.energy + pixel.energy();
-
-	}
-
-	// reinserts this seam into the image
-	// if estimateColor is true, pixels will use their neighbors colors to
-	// approximate their own color
-	// EFFECT: changes all pixel neighbors in this seam seam to refer back to
-	// the pixels
-	void reinsert() {
-		this.reinsert(this.pixel);
-	}
-
-	// estimates the color for each pixel in this seam without looking at the
-	// actual pixel colors
-	// EFFECT: changes the color of each pixel in this seam to an estimate
-	abstract void estimateColor();
-
-	// reinserts this seam into the image
-	// ACCUMULATOR: start is the first pixel in this seam
-	void reinsert(APixel start) {
-		this.pixel.reinsert(start);
-
-		if (this.cameFrom != null) {
-			this.cameFrom.reinsert(start);
-		}
-	}
-
-	// removes this seam
-	// EFFECT: removes all pixels in this seam
-	void remove() {
-		this.remove(this.pixel);
-	}
-
-	// removes the seam
-	// ACCUMULATOR: start is the pixel at the start of this seam
-	abstract void remove(APixel start);
-
-	// gets the width of this seam, i.e. how much bigger will the image get
-	// horizontally when this seam is inserted
-	abstract int width();
-
-	// gets the height of this seam, i.e. how much bigger will the image get
-	// vertically when this seam is inserted
-	abstract int height();
-
-	// compares this seam info with another
-	public int compare(ASeamInfo other) {
+	// compares this seam to the other seam using this.energy
+	@Override
+	public int compareTo(ASeamInfo other) {
 		return Double.compare(this.energy, other.energy);
+	}
+
+	// iterator that has no elements in it, returned by empty seams
+	static class NothingIterator implements Iterator<ColoredPixel> {
+
+		static final NothingIterator inst = new NothingIterator();
+
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public ColoredPixel next() {
+			throw new IllegalStateException("no more elements in the iterator");
+		}
+
 	}
 
 }

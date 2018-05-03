@@ -7,11 +7,9 @@ import javax.imageio.ImageIO;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -23,24 +21,14 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import model.PixelBiasModel;
 import model.SeamCarverModel;
+import model.UndoManager;
 
 // the controller for the seam carver app
 public class SeamCarverController {
 
-	private static final String ORIGINAL_COLOR_REINSERTION_MODE = "Original Color";
-	private static final String ESTIMATE_COLOR_REINSERTION_MODE = "Estimate Color";
-
+	private final UndoManager undoManager = new UndoManager();
 	private final SeamCarverModel seamCarverModel;
 	private final PixelBiasModel pixelBiasModel;
-
-	@FXML
-	private StackPane display;
-
-	@FXML
-	private ImageView pixelBiasImageView;
-
-	@FXML
-	private ImageView imageView;
 
 	@FXML
 	private ScrollPane controlPanel;
@@ -52,16 +40,13 @@ public class SeamCarverController {
 	private TextField horizontalShrinkAmountField;
 
 	@FXML
-	private TextField randomShrinkAmountField;
+	private TextField verticalExpandAmountField;
+
+	@FXML
+	private TextField horizontalExpandAmountField;
 
 	@FXML
 	private TextField biasBrushSizeField;
-
-	@FXML
-	private ComboBox<String> reinsertionModeComboBox;
-
-	@FXML
-	private TextField reinsertSeamsAmountField;
 
 	@FXML
 	private Text originalDimensionsText;
@@ -70,32 +55,32 @@ public class SeamCarverController {
 	private Text carvedDimensionsText;
 
 	@FXML
-	private Text verticalSeamsText;
+	private StackPane display;
 
 	@FXML
-	private Text horizontalSeamsText;
+	private ImageView imageView;
 
 	@FXML
-	private Text totalSeamsText;
+	private ImageView pixelBiasImageView;
+
+	@FXML
+	private Button undoButton;
 
 	public SeamCarverController(Image image) {
-		this.seamCarverModel = new SeamCarverModel(image);
-		this.pixelBiasModel = new PixelBiasModel(this.seamCarverModel);
+		this.seamCarverModel = new SeamCarverModel(image, undoManager);
+		this.pixelBiasModel = new PixelBiasModel(this.seamCarverModel, undoManager);
 	}
 
 	// initializes the display controller
 	// EFFECT: this.imageView's fit and height properties
 	@FXML
 	void initialize() {
-		
-		ObservableList<String> options = FXCollections.observableArrayList(
-				ORIGINAL_COLOR_REINSERTION_MODE, ESTIMATE_COLOR_REINSERTION_MODE);
 
-		this.reinsertionModeComboBox.setItems(options);
-		this.reinsertionModeComboBox.setValue(ORIGINAL_COLOR_REINSERTION_MODE);
+		this.undoManager.bindToNextOpName(this.undoButton.textProperty());
 
 		this.makeNumberField(this.verticalShrinkAmountField, this.horizontalShrinkAmountField,
-				this.randomShrinkAmountField, this.biasBrushSizeField);
+				this.verticalExpandAmountField, this.horizontalExpandAmountField,
+				this.biasBrushSizeField);
 
 		this.imageView.fitWidthProperty().bind(this.display.widthProperty());
 		this.imageView.fitHeightProperty().bind(this.display.heightProperty());
@@ -115,6 +100,20 @@ public class SeamCarverController {
 
 		this.setOriginalDimenionsText();
 
+	}
+
+	// expands the image horizontally by inserting horizontal artificial seams
+	@FXML
+	void expandHorizontally() {
+		int amount = Integer.parseInt(this.horizontalExpandAmountField.getText());
+		this.seamCarverModel.expandHorizontally(amount);
+	}
+
+	// expands the image vertically by inserts vertical artificial seams
+	@FXML
+	void expandVertically() {
+		int amount = Integer.parseInt(this.verticalExpandAmountField.getText());
+		this.seamCarverModel.expandVertically(amount);
 	}
 
 	// makes a bias stroke at pixels around the mouse position
@@ -143,27 +142,6 @@ public class SeamCarverController {
 		this.pixelBiasModel.finishStroke();
 	}
 
-	// reinserts all seams that have been removed from the original image
-	@FXML
-	void reinsertAllSeams() {
-		this.reinsertSeams(this.seamCarverModel.countRemovedSeams());
-	}
-
-	// reinserts some of the seams that have been removed
-	@FXML
-	void reinsertSeams() {
-		int amount = Integer.parseInt(this.reinsertSeamsAmountField.getText());
-		this.reinsertSeams(amount);
-	}
-
-	// reinserts the given number of seams
-	private void reinsertSeams(int amount) {
-		boolean estimateColor =
-				this.reinsertionModeComboBox.getValue().equals(ESTIMATE_COLOR_REINSERTION_MODE);
-
-		this.seamCarverModel.reinsertSeam(amount, estimateColor);
-	}
-
 	// removes all bias from all pixels
 	@FXML
 	void removeAllBias() {
@@ -174,6 +152,7 @@ public class SeamCarverController {
 	@FXML
 	void revertToOriginal() {
 		this.seamCarverModel.revertToOriginal();
+		this.undoManager.clear();
 	}
 
 	// saves the carved image
@@ -186,6 +165,10 @@ public class SeamCarverController {
 				new ExtensionFilter("gif", "*.gif"), new ExtensionFilter("jpg", "*.jpg", "*.jpeg"));
 
 		File file = fileChooser.showSaveDialog(this.controlPanel.getScene().getWindow());
+
+		if (file == null) {
+			return;
+		}
 
 		Image image = this.imageView.getImage();
 
@@ -203,30 +186,24 @@ public class SeamCarverController {
 	void shrinkHorizontally() {
 		int amount = Integer.parseInt(this.horizontalShrinkAmountField.getText());
 
-		this.seamCarverModel.removeHorizontalSeams(amount);
+		this.seamCarverModel.shrinkHorizontally(amount);
 
-	}
-
-	// randomly removes either horizontal or vertical seams
-	@FXML
-	void shrinkRandomly() {
-		int amount = Integer.parseInt(this.randomShrinkAmountField.getText());
-		this.seamCarverModel.removeRandomSeams(amount);
 	}
 
 	// removes vertical seams
 	@FXML
 	void shrinkVertically() {
 		int amount = Integer.parseInt(this.verticalShrinkAmountField.getText());
-
-		this.seamCarverModel.removeVerticalSeams(amount);
+		this.seamCarverModel.shrinkVertically(amount);
 
 	}
 
-	// undos the last pixel bias stroke
+	// undos the last operation made
 	@FXML
-	void undoLastBiasStroke() {
-		this.pixelBiasModel.undoLastStroke();
+	void undoLastOperation() {
+		if (!this.undoManager.empty()) {
+			this.undoManager.undoNext();
+		}
 	}
 
 	// sets the original dimensions text, assumes the image has not been carved
@@ -242,11 +219,6 @@ public class SeamCarverController {
 		Image img = this.imageView.getImage();
 
 		this.carvedDimensionsText.setText((int) img.getWidth() + "x" + (int) img.getHeight());
-		this.totalSeamsText.setText(Integer.toString(this.seamCarverModel.countRemovedSeams()));
-		this.verticalSeamsText
-				.setText(Integer.toString(this.seamCarverModel.countRemovedVerticalSeams()));
-		this.horizontalSeamsText
-				.setText(Integer.toString(this.seamCarverModel.countRemovedHorizontalSeams()));
 	}
 
 	// makes the given textFields accept only numbers

@@ -1,8 +1,9 @@
 package model;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
-import java.util.Stack;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -18,14 +19,16 @@ public class PixelBiasModel {
 	private static final Color BRUSH_COLOR = Color.RED;
 
 	private final SeamCarverModel seamCarver;
-	private final Stack<Collection<Point2D>> strokes = new Stack<Collection<Point2D>>();
+	private final UndoManager undoManager;
+	private final Deque<Collection<Point2D>> strokes = new ArrayDeque<Collection<Point2D>>();
 	private final Collection<Point2D> currentStroke = new HashSet<Point2D>();
 
 	private final ObjectProperty<WritableImage> canvasProperty =
 			new SimpleObjectProperty<WritableImage>();
 
-	public PixelBiasModel(SeamCarverModel seamCarver) {
+	public PixelBiasModel(SeamCarverModel seamCarver, UndoManager undoManager) {
 		this.seamCarver = seamCarver;
+		this.undoManager = undoManager;
 	}
 
 	// binds the given image property to this canvas image
@@ -38,7 +41,9 @@ public class PixelBiasModel {
 	// EFFECT: this.currentStroke, strokes,
 	public void finishStroke() {
 		this.strokes.push(new HashSet<Point2D>(this.currentStroke));
-
+		
+		this.undoManager.push("Undo Bias Stroke", () -> this.undoLastStroke());
+		
 		this.seamCarver.biasPixels(this.currentStroke);
 
 		this.currentStroke.clear();
@@ -64,7 +69,7 @@ public class PixelBiasModel {
 	// removes all pixel bias
 	// EFFECT: this.strokes, this.canvasProperty, this.seamCarver
 	public void removeAllBias() {
-
+		
 		this.strokes.clear();
 		this.currentStroke.clear();
 

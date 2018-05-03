@@ -14,12 +14,14 @@ public class SeamCarverModel {
 
 	private SeamCarver seamCarver;
 	private final Image originalImage;
+	private final UndoManager undoManager;
 
 	private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<Image>();
 
-	public SeamCarverModel(Image originalImage) {
+	public SeamCarverModel(Image originalImage, UndoManager undoManager) {
 
 		this.originalImage = originalImage;
+		this.undoManager = undoManager;
 
 		this.revertToOriginal();
 
@@ -46,115 +48,87 @@ public class SeamCarverModel {
 
 	// biases the given pixels
 	// EFFECT: this.seamCarver
-	public void biasPixels(Collection<Point2D> points) {
+	void biasPixels(Collection<Point2D> points) {
 		this.seamCarver.biasPixels(points);
 		this.updateImage();
 	}
 
 	// unbiases the given pixels
 	// EFFECT: this.seamCarver
-	public void unbiasPixels(Collection<Point2D> points) {
+	void unbiasPixels(Collection<Point2D> points) {
 		this.seamCarver.unbiasPixels(points);
 		this.updateImage();
 	}
 
 	// unbiases all pixels
 	// EFFECT: this.seamCarver
-	public void unbiasAllPixels() {
+	void unbiasAllPixels() {
 		this.seamCarver.unbiasAllPixels();
-		this.updateImage();
-	}
-
-	// reinserts some seams, either using original color or an estimated color
-	// EFFECT: this.seamCarver, this.imageProperty
-	public void reinsertSeam(int amount, boolean estimateColor) {
-		for (int i = 0; i < amount; i++) {
-
-			if (this.countRemovedSeams() == 0) {
-				break;
-			}
-
-			this.seamCarver.reinsertSeam(estimateColor);
-
-		}
-
 		this.updateImage();
 	}
 
 	// removes some vertical seams from the carved image
 	// EFFECT: this.seamCarver, this.imageProperty
-	public void removeVerticalSeams(int amount) {
-		for (int i = 0; i < amount; i++) {
+	public void shrinkVertically(int amount) {
 
-			if (this.getWidth() == 1) {
-				break;
-			}
+		this.seamCarver.removeHorizontalSeams(amount);
 
-			this.seamCarver.removeVerticalSeam();
-
-		}
+		this.addUndoOperationForSeamCarver("Undo Vertical Shrink");
 
 		this.updateImage();
+
 	}
 
 	// removes some horizontal seams from the carved image
 	// EFFECT: this.seamCarver, this.imageProperty
-	public void removeHorizontalSeams(int amount) {
-		for (int i = 0; i < amount; i++) {
+	public void shrinkHorizontally(int amount) {
 
-			if (this.getHeight() == 1) {
-				break;
-			}
+		this.seamCarver.removeVerticalSeams(amount);
 
-			this.seamCarver.removeHorizontalSeam();
-
-		}
+		this.addUndoOperationForSeamCarver("Undo Horizontal Shrink");
 
 		this.updateImage();
+
 	}
+	
+	// fabricates artificial horizontal seams to expand the image vertically
+	public void expandVertically(int amount) {
 
-	// removes horizontal and vertical seams randomly
-	// EFFECT: this.seamCarver, this.imageProperty
-	public void removeRandomSeams(int amount) {
-		for (int i = 0; i < amount; i++) {
+		this.seamCarver.insertHorizontalSeams(amount);
 
-			if (this.getHeight() == 1 || this.getWidth() == 1) {
-				break;
-			}
-
-			if (Math.random() < 0.5) {
-				this.seamCarver.removeHorizontalSeam();
-			} else {
-				this.seamCarver.removeVerticalSeam();
-			}
-		}
+		this.addUndoOperationForSeamCarver("Undo Vertical Expand");
 
 		this.updateImage();
+
 	}
 
+	// fabricates artificial vertical seams to expand the image horizontally
+	public void expandHorizontally(int amount) {
+
+		this.seamCarver.insertVerticalSeams(amount);
+
+		this.addUndoOperationForSeamCarver("Undo Horizontal Expand");
+
+		this.updateImage();
+
+	}
+
+	// adds an undo operation for expansion given the seams that were inserted
+	private void addUndoOperationForSeamCarver(String name) {
+		this.undoManager.push(name, () -> {
+			this.seamCarver.undoLastOperation();
+			this.updateImage();
+		});
+	}
+	
 	// gets the width of the current carved image
 	public int getWidth() {
-		return seamCarver.getWidth();
+		return this.seamCarver.getWidth();
 	}
 
 	// gets the height of the current carved image
 	public int getHeight() {
-		return seamCarver.getHeight();
-	}
-
-	// gets the total amount of seams that have been removed
-	public int countRemovedSeams() {
-		return seamCarver.countRemovedSeams();
-	}
-
-	// counts the amount of vertical seams that have been removed
-	public int countRemovedVerticalSeams() {
-		return (int) (this.originalImage.getWidth() - this.imageProperty.get().getWidth());
-	}
-
-	// counts the amount of vertical seams that have been removed
-	public int countRemovedHorizontalSeams() {
-		return (int) (this.originalImage.getHeight() - this.imageProperty.get().getHeight());
+		return this.seamCarver.getHeight();
 	}
 
 }

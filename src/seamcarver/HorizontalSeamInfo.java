@@ -1,49 +1,101 @@
 package seamcarver;
 
-//represents a horizontal seam info
-class HorizontalSeamInfo extends ASeamInfo {
+import java.util.ArrayList;
+import java.util.Iterator;
 
-	HorizontalSeamInfo(APixel pixel, double energy) {
-		super(pixel, energy);
+class HorizontalSeamInfo extends AHorizontalSeamInfo {
+
+	private final ColoredPixel pixel;
+	// this is null until calculuated
+	private AHorizontalSeamInfo cameFrom = null;
+
+	HorizontalSeamInfo(ColoredPixel pixel) {
+		this.pixel = pixel;
+	}
+	
+	private HorizontalSeamInfo(ColoredPixel pixel, double energy, AHorizontalSeamInfo cameFrom) {
+		this(pixel);
+
+		this.energy = energy;
+		this.cameFrom = cameFrom;
+
 	}
 
-	HorizontalSeamInfo(APixel pixel, ASeamInfo parent1, ASeamInfo parent2, ASeamInfo parent3) {
-		super(pixel, parent1, parent2, parent3);
+	void calculate(ArrayList<AHorizontalSeamInfo> parents) {
+		this.cameFrom = ASeamInfo.lowestEnergy(parents);
+		this.energy = this.pixel.energy() + this.cameFrom.energy;
 	}
 
-	// removes the seam horizontally, remembers the first pixel on this seam
-	// ACCUMULATOR: remembers the start of this seam
 	@Override
-	void remove(APixel start) {
-		if (this.cameFrom != null) {
-			this.pixel.removeHorizontally(this.cameFrom.pixel, start);
-			this.cameFrom.remove(start);
-		} else {
-			this.pixel.removeHorizontally(null, start);
+	public void reinsert() {
+		this.pixel.reinsert();
+		this.cameFrom.reinsert();
+	}
+
+	@Override
+	public void remove() {
+		this.pixel.removeFromHorizontalSeam(this.cameFrom.pixel());
+		this.cameFrom.remove();
+	}
+
+	@Override
+	public void removeDontFixLinks() {
+		this.pixel.removeFromHorizontalSeam();
+		this.cameFrom.removeDontFixLinks();
+	}
+
+	@Override
+	public HorizontalSeamInfo duplicate() {
+		AHorizontalSeamInfo cameFromDupe = this.cameFrom.duplicate();
+
+		ColoredPixel newPixel =
+				this.pixel.duplicateToTop(cameFromDupe.pixel(), this.cameFrom.pixel());
+
+		return new HorizontalSeamInfo(newPixel, this.energy, cameFromDupe);
+	}
+
+	@Override
+	public HorizontalSeamInfo duplicateDontFixLinks() {
+		AHorizontalSeamInfo cameFromDupe = this.cameFrom.duplicateDontFixLinks();
+
+		ColoredPixel newPixel = this.pixel.duplicateToTop();
+
+		return new HorizontalSeamInfo(newPixel, this.energy, cameFromDupe);
+	}
+
+	@Override
+	ColoredPixel pixel() {
+		return this.pixel;
+	}
+
+	@Override
+	public Iterator<ColoredPixel> iterator() {
+		return new HorizontalSeamIterator();
+	}
+
+	@Override
+	HorizontalSeamInfo asHorizontalSeamInfo() {
+		return this;
+	}
+
+	// iterator over all pixels in this seam info and all seam infos before this
+	class HorizontalSeamIterator implements Iterator<ColoredPixel> {
+
+		// will equal null when there's nothing left of the seam
+		private HorizontalSeamInfo current = HorizontalSeamInfo.this;
+
+		@Override
+		public boolean hasNext() {
+			return current != null;
 		}
-	}
 
-	// estimates the color for each pixel using its top and bottom pixels
-	// EFFECT: changes the color of each pixel in this seam to an estimate
-	void estimateColor() {
-		if (this.cameFrom != null) {
-			this.pixel.estimateColorHorizontally(this.cameFrom.pixel);
-			this.cameFrom.estimateColor();
-		} else {
-			this.pixel.estimateColorHorizontally(null);
+		@Override
+		public ColoredPixel next() {
+			ColoredPixel temp = this.current.pixel;
+			this.current = this.current.cameFrom.asHorizontalSeamInfo();
+			return temp;
 		}
-	}
 
-	// since this is a horizontal seam, it has a width of 0
-	@Override
-	int width() {
-		return 0;
-	}
-
-	// since this is a horizontal seam, it has a height of 1
-	@Override
-	int height() {
-		return 1;
 	}
 
 }

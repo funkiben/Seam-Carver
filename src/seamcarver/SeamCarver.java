@@ -1,8 +1,9 @@
 package seamcarver;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Stack;
+import java.util.Deque;
 
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
@@ -11,328 +12,458 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
-// performs seam carving for images
+// a class for seam carving
 public class SeamCarver {
 
-	private final SentinelPixel pixel00;
+	// the pixel at the top right of the image
+	private final TopLeftBorderPixel topLeft;
 
-	// the current width and height of the carved image
-	private int width;
-	private int height;
+	private int width, height;
 
-	private final Stack<ASeamInfo> removedSeams = new Stack<ASeamInfo>();
+	private final Deque<ISeamOperation> operations = new ArrayDeque<ISeamOperation>();
 
-	// creates pixels data structure from the given image that are all properly
-	// linked up
 	public SeamCarver(Image image) {
+
 		this.width = (int) image.getWidth();
 		this.height = (int) image.getHeight();
 
-		this.pixel00 = new SentinelPixel();
+		PixelReader pixelReader = image.getPixelReader();
 
-		ArrayList<ASentinelPixel> sentinelColumn = new ArrayList<ASentinelPixel>();
-		ArrayList<ASentinelPixel> sentinelRow = new ArrayList<ASentinelPixel>();
+		TopRightBorderPixel topRight = new TopRightBorderPixel();
+		BottomLeftBorderPixel bottomLeft = new BottomLeftBorderPixel();
 
-		// represents the previous sentinel in the row or column
-		ASentinelPixel prev = this.pixel00;
+		this.topLeft = new TopLeftBorderPixel(topRight, bottomLeft);
 
-		// first create a row of row sentinels around pixel00
-		for (int col = 0; col < this.width; col += 1) {
-			prev = new SentinelRowPixel(prev, this.pixel00);
-			sentinelRow.add(prev);
+		// represents the pixels above the current row being iterated through
+		ArrayList<IPixel> topBorderPixels = new ArrayList<IPixel>();
+
+		// the last top bprder pixel created
+		ATopBorderPixel rightTopBorderPixel = topRight;
+
+		for (int x = 0; x < image.getWidth(); x++) {
+			rightTopBorderPixel = new TopBorderPixel(this.topLeft, rightTopBorderPixel);
+			topBorderPixels.add(0, rightTopBorderPixel);
 		}
 
-		prev = this.pixel00;
+		// represents the column of left border pixels
+		ArrayList<IPixel> leftBorderPixels = new ArrayList<IPixel>();
 
-		// then create a column of column sentinels around pixel00
-		for (int row = 0; row < this.height; row += 1) {
-			prev = new SentinelColumnPixel(prev, this.pixel00);
-			sentinelColumn.add(prev);
+		// the last left border pixel created
+		ALeftBorderPixel bottomLeftBorderPixel = bottomLeft;
+
+		for (int y = 0; y < image.getHeight(); y++) {
+			bottomLeftBorderPixel = new LeftBorderPixel(this.topLeft, bottomLeftBorderPixel);
+			leftBorderPixels.add(0, bottomLeftBorderPixel);
 		}
 
-		// the row above the current row
-		ArrayList<APixel> aboveRow = new ArrayList<APixel>();
-		aboveRow.addAll(sentinelRow);
+		// represents the pixels above the current row being iterated through
+		ArrayList<IPixel> aboveRow = new ArrayList<IPixel>();
+		aboveRow.addAll(topBorderPixels);
 
-		PixelReader pixels = image.getPixelReader();
+		// we can reuse the same right and bottom border pixel objects, they
+		// don't need to be unique
+		RightBorderPixel right = new RightBorderPixel();
+		BottomBorderPixel bottom = new BottomBorderPixel();
 
-		for (int row = 0; row < this.height; row += 1) {
+		for (int y = 0; y < image.getHeight(); y++) {
 
-			// the pixel to the left of the current pixel in the current row
-			APixel left = sentinelColumn.get(row);
+			IPixel left = leftBorderPixels.get(y);
 
-			for (int col = 0; col < this.width; col += 1) {
+			for (int x = 0; x < image.getWidth(); x++) {
 
-				Color color = pixels.getColor(col, row);
+				Color color = pixelReader.getColor(x, y);
 
-				Pixel pixel = new Pixel(color, aboveRow.get(col), sentinelColumn.get(row),
-						sentinelRow.get(col), left);
+				ColoredPixel pixel = new ColoredPixel(color, left, right, aboveRow.get(x), bottom);
 
-				// record the new pixel in the above row for next iteration
-				aboveRow.set(col, pixel);
-
-				// save the new pixel as the new left for next iteration
+				aboveRow.set(x, pixel);
 				left = pixel;
 
 			}
 
 		}
+		
+		this.testStructuralIntegrity();
+
 	}
 
-	// biases the given pixels
+	// undos the last operation done on the image
+	public void undoLastOperation() {
+		if (!this.operations.isEmpty()) {
+			this.operations.pop().undo();
+		}
+	}
+
+	// function object for acting upon pixels given the pixels coordinates
+	private interface PixelCoordOperation {
+
+		void op(ColoredPixel pixel, int x, int y);
+
+	}
+
+	// nice little abstraction for iterating through a pixel while keeping track
+	// of their coordinates
+	private void coordIterate(PixelCoordOperation op) {
+
+		int x = 0, y = 0;
+
+		for (LeftBorderPixel row : this.topLeft.rows()) {
+
+			x = 0;
+
+			for (ColoredPixel pixel : row.rowIterable()) {
+
+				op.op(pixel, x, y);
+
+				x += 1;
+
+			}
+
+			y += 1;
+
+		}
+
+	}
+
+	// biases all pixels with the given coordinates
 	public void biasPixels(Collection<Point2D> points) {
 
-		int curX = 0;
-		int curY = 0;
+		this.coordIterate((pixel, x, y) -> {
 
-		Point2D point;
-
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
-
-			curX = 0;
-
-			for (APixel pixel : new PixelRowIterable(row)) {
-
-				point = new Point2D(curX, curY);
-
-				if (points.contains(point)) {
-					pixel.bias();
-				}
-
-				curX += 1;
-
+			if (points.contains(new Point2D(x, y))) {
+				pixel.bias();
 			}
 
-			curY += 1;
-
-		}
+		});
 
 	}
 
-	// unbiases the given pixels
+	// unbiases all pixels with the given coordinates
 	public void unbiasPixels(Collection<Point2D> points) {
 
-		int curX = 0;
-		int curY = 0;
+		this.coordIterate((pixel, x, y) -> {
 
-		Point2D point;
-
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
-
-			curX = 0;
-
-			for (APixel pixel : new PixelRowIterable(row)) {
-
-				point = new Point2D(curX, curY);
-
-				if (points.contains(point)) {
-					pixel.unbias();
-				}
-
-				curX += 1;
-
+			if (points.contains(new Point2D(x, y))) {
+				pixel.unbias();
 			}
 
-			curY += 1;
-
-		}
+		});
 
 	}
 
-	// unbiases the given pixels
+	// unbiases all pixels
 	public void unbiasAllPixels() {
 
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
+		for (LeftBorderPixel row : this.topLeft.rows()) {
 
-			for (APixel pixel : new PixelRowIterable(row)) {
+			for (ColoredPixel pixel : row.rowIterable()) {
 
 				pixel.unbias();
 
 			}
 
 		}
+	}
+
+	// makes all pixels avoided
+	public void avoidPixels(Collection<Point2D> points) {
+
+		this.coordIterate((pixel, x, y) -> {
+
+			if (points.contains(new Point2D(x, y))) {
+				pixel.avoid();
+			}
+
+		});
 
 	}
 
-	// gets the current width of the carved image
+	// unavoids all pixels with the given coordinates
+	public void unavoidPixel(Collection<Point2D> points) {
+
+		this.coordIterate((pixel, x, y) -> {
+
+			if (points.contains(new Point2D(x, y))) {
+				pixel.unavoid();
+			}
+
+		});
+
+	}
+
+	// unavoids all pixels
+	public void unavoidAllPixels() {
+
+		for (LeftBorderPixel row : this.topLeft.rows()) {
+
+			for (ColoredPixel pixel : row.rowIterable()) {
+
+				pixel.unbias();
+
+			}
+
+		}
+	}
+
+	// makes the carved image
+	public Image makeImage() {
+
+		WritableImage image = new WritableImage(this.width, this.height);
+		PixelWriter pixelWriter = image.getPixelWriter();
+
+		this.coordIterate((pixel, x, y) -> {
+
+			pixel.draw(pixelWriter, x, y);
+
+		});
+
+		return image;
+
+	}
+
+	// calculates the cheapest vertical seam
+	private ISeam calculateCheapestVerticalSeam() {
+		LeftBorderPixel lastRow = null;
+
+		for (LeftBorderPixel row : this.topLeft.rows()) {
+
+			for (ColoredPixel pixel : row.rowIterable()) {
+				pixel.calculateVerticalSeamInfo();
+			}
+
+			lastRow = row;
+		}
+
+		return lastRow.cheapestVerticalSeam();
+	}
+
+	// calculates the cheapest horizontal seam
+	private ISeam calculateCheapestHorizontalSeam() {
+		TopBorderPixel lastColumn = null;
+
+		for (TopBorderPixel column : this.topLeft.columns()) {
+
+			for (ColoredPixel pixel : column.columnIterable()) {
+				pixel.calculateHorizontalSeamInfo();
+			}
+
+			lastColumn = column;
+		}
+
+		return lastColumn.cheapestHorizontalSeam();
+	}
+
+	// removes vertical seams from the image
+	public void removeVerticalSeams(int amount) {
+
+		int clampedAmount = Math.max(1, amount);
+
+		Deque<ISeam> seams = new ArrayDeque<ISeam>();
+
+		for (int i = 0; i < clampedAmount; i++) {
+
+			ISeam seam = this.calculateCheapestVerticalSeam();
+			seam.remove();
+
+			seams.push(seam);
+
+		}
+
+		this.width -= clampedAmount;
+
+		this.operations.push(() -> {
+
+			while (!seams.isEmpty()) {
+				seams.pop().reinsert();
+			}
+
+			this.width += clampedAmount;
+
+		});
+
+	}
+
+	// removes horizontal seams from the image
+	public void removeHorizontalSeams(int amount) {
+
+		int clampedAmount = Math.max(1, amount);
+
+		Deque<ISeam> seams = new ArrayDeque<ISeam>();
+
+		for (int i = 0; i < clampedAmount; i++) {
+
+			ISeam seam = this.calculateCheapestHorizontalSeam();
+			seam.remove();
+
+			seams.push(seam);
+
+		}
+
+		this.height -= clampedAmount;
+
+		this.operations.push(() -> {
+
+			while (!seams.isEmpty()) {
+				seams.pop().reinsert();
+			}
+
+			this.height += clampedAmount;
+
+		});
+
+	}
+
+	// inserts vertical seams, returns all the seams inserted
+	public void insertVerticalSeams(int amount) {
+
+		Deque<ISeam> removedSeams = new ArrayDeque<ISeam>();
+
+		for (int i = 0; i < amount; i++) {
+			ISeam seam = this.calculateCheapestVerticalSeam();
+
+			seam.remove();
+
+			removedSeams.push(seam);
+
+		}
+
+		for (ISeam seam : removedSeams) {
+			seam.reinsert();
+		}
+
+		Deque<ISeam> newSeams = new ArrayDeque<ISeam>();
+
+		while (!removedSeams.isEmpty()) {
+			ISeam seam = removedSeams.pop();
+			ISeam dupe = seam.duplicateDontFixLinks();
+			newSeams.push(dupe);
+		}
+
+		this.fixBrokenVerticalLinks();
+		
+		this.testStructuralIntegrity();
+
+		this.width += amount;
+
+		this.operations.push(() -> {
+			
+			while (!newSeams.isEmpty()) {
+				newSeams.pop().removeDontFixLinks();
+			}
+			
+			this.fixBrokenVerticalLinks();
+			
+			this.width -= amount;
+
+		});
+
+	}
+
+	// inserts horizontal seams, returns all the seams inserted
+	public void insertHorizontalSeams(int amount) {
+
+		Deque<ISeam> removedSeams = new ArrayDeque<ISeam>();
+
+		for (int i = 0; i < amount; i++) {
+			ISeam seam = this.calculateCheapestHorizontalSeam();
+
+			seam.remove();
+
+			removedSeams.push(seam);
+
+		}
+
+		for (ISeam seam : removedSeams) {
+			seam.reinsert();
+		}
+
+		Deque<ISeam> newSeams = new ArrayDeque<ISeam>();
+
+		while (!removedSeams.isEmpty()) {
+			ISeam seam = removedSeams.pop();
+			ISeam dupe = seam.duplicateDontFixLinks();
+			newSeams.push(dupe);
+		}
+
+		this.fixBrokenHorizontalLinks();
+
+		this.height += amount;
+
+		this.operations.push(() -> {
+			
+			while (!newSeams.isEmpty()) {
+				newSeams.pop().removeDontFixLinks();
+			}
+			
+			this.fixBrokenHorizontalLinks();
+			
+			this.height -= amount;
+
+		});
+
+	}
+
+	// fixed vertical broken links, used after inserting vertical seams because
+	// the seams become broken
+	private void fixBrokenVerticalLinks() {
+
+		Deque<IPixel> prevRow = new ArrayDeque<IPixel>();
+
+		for (TopBorderPixel pixel : this.topLeft.columns()) {
+			prevRow.addFirst(pixel);
+		}
+
+		for (LeftBorderPixel row : this.topLeft.rows()) {
+
+			for (ColoredPixel pixel : row.rowIterable()) {
+
+				pixel.linkTopMutual(prevRow.removeLast());
+
+				prevRow.addFirst(pixel);
+
+			}
+
+		}
+
+	}
+
+	// fixes horizontal broken links, used after inserting horizontal seams
+	// because seams become broken
+	private void fixBrokenHorizontalLinks() {
+
+		Deque<IPixel> prevColumn = new ArrayDeque<IPixel>();
+
+		for (LeftBorderPixel pixel : this.topLeft.rows()) {
+			prevColumn.addFirst(pixel);
+		}
+
+		for (TopBorderPixel column : this.topLeft.columns()) {
+
+			for (ColoredPixel pixel : column.columnIterable()) {
+
+				pixel.linkLeftMutual(prevColumn.removeLast());
+
+				prevColumn.addFirst(pixel);
+
+			}
+
+		}
+
+	}
+
 	public int getWidth() {
 		return this.width;
 	}
 
-	// gets the current height of the carved image
 	public int getHeight() {
 		return this.height;
 	}
 
-	// computes all the vertical seams
-	// EFFECT: changes the seamInfo fields of all pixels
-	private ASeamInfo calculuateCheapestVerticalSeam() {
+	private void testStructuralIntegrity() {
 
-		ASeamInfo cheapest = this.pixel00.vSeamInfo;
+		for (TopBorderPixel column : this.topLeft.columns()) {
 
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
-
-			for (APixel pixel : new PixelRowIterable(row)) {
-
-				pixel.calcVerticalSeamInfo();
-
-				if (row == this.pixel00.top && pixel.vSeamInfo.compare(cheapest) < 0) {
-					cheapest = pixel.vSeamInfo;
-				}
-
-			}
-
-		}
-
-		return cheapest;
-
-	}
-
-	// computes all the horizontal seams
-	// EFFECT: changes the seamInfo fields of all pixels
-	private ASeamInfo calculateCheapestHorizontalSeam() {
-
-		ASeamInfo cheapest = this.pixel00.hSeamInfo;
-
-		for (APixel column : new PixelRowIterable(this.pixel00)) {
-
-			for (APixel pixel : new PixelColumnIterable(column)) {
-
-				pixel.calcHorizontalSeamInfo();
-
-				if (column == this.pixel00.left && pixel.hSeamInfo.compare(cheapest) < 0) {
-					cheapest = pixel.hSeamInfo;
-				}
-
-			}
-
-		}
-
-		return cheapest;
-
-	}
-
-	// creates the carved image from the current pixels
-	public Image makeImage() {
-
-		WritableImage carvedImage = new WritableImage(this.width, this.height);
-
-		PixelWriter pixelWriter = carvedImage.getPixelWriter();
-
-		int curX = 0;
-		int curY = 0;
-
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
-
-			curX = 0;
-
-			for (APixel pixel : new PixelRowIterable(row)) {
-
-				pixel.setColor(pixelWriter, curX, curY);
-
-				curX += 1;
-
-			}
-
-			curY += 1;
-
-		}
-
-		return carvedImage;
-	}
-
-	// reinserts the last seam removed
-	// EFFECT: puts the pixels of the last removed seam back into the image, and
-	// increases the width or height by one
-	public void reinsertSeam(boolean estimateColor) {
-
-		if (this.removedSeams.isEmpty()) {
-			throw new IllegalStateException("no seams to reinsert!");
-		}
-
-		ASeamInfo seam = this.removedSeams.pop();
-
-		seam.reinsert();
-
-		if (estimateColor) {
-			seam.estimateColor();
-		}
-
-		this.width += seam.width();
-		this.height += seam.height();
-
-		this.testStructualInvariant();
-
-	}
-
-	// finds the cheapest vertical seam info in the last row of pixels and
-	// removes the entire seam
-	public void removeVerticalSeam() {
-
-		if (this.width == 0) {
-			throw new IllegalStateException("no more pixels to remove!");
-		}
-
-		ASeamInfo seam = this.calculuateCheapestVerticalSeam();
-
-		seam.remove();
-
-		this.removedSeams.push(seam);
-
-		this.width -= 1;
-	}
-
-	// finds the cheapest vertical seam info in the last row of pixels and
-	// removes the entire seam
-	public void removeHorizontalSeam() {
-
-		if (this.height == 0) {
-			throw new IllegalStateException("no more pixels to remove!");
-		}
-
-		ASeamInfo seam = this.calculateCheapestHorizontalSeam();
-
-		seam.remove();
-
-		this.removedSeams.push(seam);
-
-		this.height -= 1;
-	}
-
-	// gets the number of removed seams
-	public int countRemovedSeams() {
-		return this.removedSeams.size();
-	}
-
-	public void testStructualInvariant() {
-
-		for (APixel row : new PixelColumnIterable(this.pixel00)) {
-
-			for (APixel pixel : new PixelRowIterable(row)) {
-
-				if (pixel.right.left != pixel) {
-					System.out.println("found a pixel where its right does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName()
-							+ " is not referenced by a " + pixel.right.getClass().getSimpleName());
-				}
-
-				if (pixel.left.right != pixel) {
-					System.out.println("found a pixel where its left does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName()
-							+ " is not referenced by a " + pixel.left.getClass().getSimpleName());
-				}
-
-				if (pixel.top.bottom != pixel) {
-					System.out.println("found a pixel where its top does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName()
-							+ " is not referenced by a " + pixel.top.getClass().getSimpleName());
-				}
-
-				if (pixel.bottom.top != pixel) {
-					System.out.println("found a pixel where its bottom does not refer to it");
-					System.out.println("A " + pixel.getClass().getSimpleName()
-							+ " is not referenced by a " + pixel.bottom.getClass().getSimpleName());
-				}
+			for (ColoredPixel pixel : column.columnIterable()) {
+				pixel.testStructuralIntegrity();
 
 			}
 
