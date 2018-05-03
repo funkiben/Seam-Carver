@@ -9,22 +9,22 @@ class TopRightBorderPixel extends ATopBorderPixel {
 	public void linkLeft(IPixel left) {
 		left.linkRight(this);
 	}
-	
+
 	@Override
 	public void linkLeft(TopBorderPixel left) {
-		
+
 	}
 
 	@Override
 	public void linkLeft(TopLeftBorderPixel left) {
-		
+
 	}
 
 	@Override
 	public Iterator<TopBorderPixel> iterator() {
 		return NothingIterator.inst;
 	}
-	
+
 	// iterator that has no elements in it, returned by corner pixels
 	private static class NothingIterator implements Iterator<TopBorderPixel> {
 
@@ -41,6 +41,5 @@ class TopRightBorderPixel extends ATopBorderPixel {
 		}
 
 	}
-	
 
 }

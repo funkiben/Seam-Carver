@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // abstract class for seam infos
-abstract class ASeamInfo implements ISeam, Comparable<ASeamInfo>  {
+abstract class ASeamInfo implements ISeam, Comparable<ASeamInfo> {
 
 	// returns the seam info with the lowest energy
 	static <T extends ASeamInfo> T lowestEnergy(ArrayList<T> seamInfos) {

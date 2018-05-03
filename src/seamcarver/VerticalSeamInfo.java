@@ -13,7 +13,7 @@ class VerticalSeamInfo extends AVerticalSeamInfo {
 	VerticalSeamInfo(ColoredPixel pixel) {
 		this.pixel = pixel;
 	}
-	
+
 	private VerticalSeamInfo(ColoredPixel pixel, double energy, AVerticalSeamInfo cameFrom) {
 		this(pixel);
 

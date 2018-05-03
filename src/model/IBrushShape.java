@@ -10,8 +10,8 @@ import javafx.scene.paint.Color;
 
 public interface IBrushShape {
 
-	void doStroke(Collection<Point2D> points, Color color, PixelWriter pixelWriter,
-			int size, int px, int py, int width, int height);
+	void doStroke(Collection<Point2D> points, Color color, PixelWriter pixelWriter, int size,
+			int px, int py, int width, int height);
 
 	// checks if the given x and y are inside a canvas with the given width and
 	// height

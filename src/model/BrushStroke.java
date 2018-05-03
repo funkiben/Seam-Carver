@@ -20,7 +20,7 @@ class BrushStroke {
 		this.shape = shape;
 		this.mode = mode;
 	}
-	
+
 	// undos this stroke
 	void undo(SeamCarver seamCarver) {
 		this.mode.undo(seamCarver, this.points);
@@ -36,7 +36,7 @@ class BrushStroke {
 	void add(PixelWriter pixelWriter, int x, int y, int width, int height) {
 		this.shape.doStroke(this.points, mode.color(), pixelWriter, this.size, x, y, width, height);
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.mode.toString() + " Stroke";

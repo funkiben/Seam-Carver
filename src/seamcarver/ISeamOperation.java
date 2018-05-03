@@ -4,5 +4,5 @@ package seamcarver;
 interface ISeamOperation {
 
 	void undo();
-	
+
 }

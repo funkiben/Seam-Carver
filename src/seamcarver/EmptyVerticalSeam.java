@@ -20,7 +20,7 @@ class EmptyVerticalSeam extends AVerticalSeamInfo {
 	public void remove() {
 		this.pixel.remove();
 	}
-	
+
 	@Override
 	public void removeDontFixLinks() {
 		this.pixel.remove();
@@ -30,7 +30,7 @@ class EmptyVerticalSeam extends AVerticalSeamInfo {
 	public EmptyVerticalSeam duplicate() {
 		return new EmptyVerticalSeam(this.pixel.duplicate());
 	}
-	
+
 	@Override
 	public EmptyVerticalSeam duplicateDontFixLinks() {
 		return new EmptyVerticalSeam(this.pixel.duplicate());
@@ -49,5 +49,5 @@ class EmptyVerticalSeam extends AVerticalSeamInfo {
 	VerticalSeamInfo asVerticalSeamInfo() {
 		return null;
 	}
-	
+
 }

@@ -39,7 +39,7 @@ class BottomLeftBorderPixel extends ALeftBorderPixel {
 		public LeftBorderPixel next() {
 			throw new IllegalStateException("no more elements in the iterator");
 		}
-		
+
 	}
 
 }

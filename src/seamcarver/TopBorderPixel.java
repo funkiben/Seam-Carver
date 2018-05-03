@@ -105,7 +105,7 @@ class TopBorderPixel extends ATopBorderPixel {
 	void remove() {
 		this.right.linkLeftMutual(this.left);
 	}
-	
+
 	TopBorderPixel duplicate() {
 		return new TopBorderPixel(this.left, this, this.bottom);
 	}
@@ -119,7 +119,7 @@ class TopBorderPixel extends ATopBorderPixel {
 	HorizontalSeamInfo cheapestHorizontalSeam() {
 		return this.bottom.cheapestHorizontalSeamInColumn();
 	}
-	
+
 	// iterates through the column of colored pixels below this
 	Iterable<ColoredPixel> columnIterable() {
 		return this.bottom.columnIterable();

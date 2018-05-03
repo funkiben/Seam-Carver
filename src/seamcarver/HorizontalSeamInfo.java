@@ -12,7 +12,7 @@ class HorizontalSeamInfo extends AHorizontalSeamInfo {
 	HorizontalSeamInfo(ColoredPixel pixel) {
 		this.pixel = pixel;
 	}
-	
+
 	private HorizontalSeamInfo(ColoredPixel pixel, double energy, AHorizontalSeamInfo cameFrom) {
 		this(pixel);
 

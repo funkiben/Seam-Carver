@@ -9,7 +9,7 @@ import seamcarver.SeamCarver;
 public class BiasForBrushMode implements IBrushMode {
 
 	private static final Color COLOR = Color.rgb(0, 255, 0, 0.75);
-	
+
 	@Override
 	public Color color() {
 		return COLOR;
@@ -24,7 +24,7 @@ public class BiasForBrushMode implements IBrushMode {
 	public void undo(SeamCarver seamCarver, Collection<Point2D> points) {
 		seamCarver.unbiasPixels(points);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Bias For";

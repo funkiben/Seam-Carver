@@ -7,10 +7,10 @@ class BottomBorderPixel extends ABorderPixel {
 	public void linkTop(IPixel top) {
 		top.linkBottom(this);
 	}
-	
+
 	@Override
 	public void linkTop(ColoredPixel top) {
-		
+
 	}
 
 }

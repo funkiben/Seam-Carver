@@ -7,10 +7,10 @@ class RightBorderPixel extends ABorderPixel {
 	public void linkLeft(IPixel left) {
 		left.linkRight(this);
 	}
-	
+
 	@Override
 	public void linkLeft(ColoredPixel left) {
-		
+
 	}
 
 }

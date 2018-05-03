@@ -233,7 +233,5 @@ abstract class APixel implements IPixel {
 	public void linkBottom(BottomLeftBorderPixel bottom) {
 		this.linkBottomErr(bottom);
 	}
-	
-	
 
 }

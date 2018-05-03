@@ -1,6 +1,5 @@
 package model;
 
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
@@ -117,7 +116,7 @@ public class SeamCarverModel {
 	public int getOriginalHeight() {
 		return (int) this.originalImage.getHeight();
 	}
-	
+
 	// gets the underlying seam carver object
 	SeamCarver getSeamCarver() {
 		return this.seamCarver;

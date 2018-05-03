@@ -13,8 +13,7 @@ public class UndoManager {
 	private final Deque<String> names = new ArrayDeque<String>();
 	private final Deque<IUndoableOperation> undoOps = new ArrayDeque<IUndoableOperation>();
 	private final StringProperty nextOpNameProperty = new SimpleStringProperty("Undo");
-	
-	
+
 	// adds a new undoable operation
 	// EFFECT: this.undoOps, this.names
 	public void push(String name, IUndoableOperation item) {
@@ -35,12 +34,12 @@ public class UndoManager {
 			this.nextOpNameProperty.set("Undo");
 		}
 	}
-	
+
 	// checks if there are no more operations to undo
 	public boolean empty() {
 		return this.undoOps.isEmpty();
 	}
-	
+
 	// binds the given property to the next operation that can be undone
 	public void bindToNextOpName(StringProperty property) {
 		property.bind(this.nextOpNameProperty);
@@ -52,5 +51,5 @@ public class UndoManager {
 		this.undoOps.clear();
 		this.nextOpNameProperty.set("Undo");
 	}
-	
+
 }

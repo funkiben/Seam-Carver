@@ -5,7 +5,7 @@ class TopLeftBorderPixel extends ABorderPixel {
 
 	private ATopBorderPixel right;
 	private ALeftBorderPixel bottom;
-	
+
 	TopLeftBorderPixel(ATopBorderPixel right, ALeftBorderPixel bottom) {
 		right.linkLeftMutual(this);
 		bottom.linkTopMutual(this);
@@ -40,7 +40,7 @@ class TopLeftBorderPixel extends ABorderPixel {
 	public void linkBottom(BottomLeftBorderPixel bottom) {
 		this.bottom = bottom;
 	}
-	
+
 	@Override
 	public boolean isRight(IPixel pixel) {
 		return pixel == this.right;

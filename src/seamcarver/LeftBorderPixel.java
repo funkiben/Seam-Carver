@@ -104,7 +104,7 @@ class LeftBorderPixel extends ALeftBorderPixel {
 	void remove() {
 		this.bottom.linkTopMutual(this.top);
 	}
-	
+
 	LeftBorderPixel duplicate() {
 		return new LeftBorderPixel(this.top, this, this.right);
 	}
@@ -114,7 +114,7 @@ class LeftBorderPixel extends ALeftBorderPixel {
 		this.top.linkBottom(this);
 		this.right.linkLeft(this);
 	}
-	
+
 	VerticalSeamInfo cheapestVerticalSeam() {
 		return this.right.cheapestVerticalSeamInRow();
 	}
