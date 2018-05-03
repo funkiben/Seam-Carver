@@ -61,7 +61,7 @@ public class PixelBrushModel {
 
 		lastStroke.undo(this.seamCarverModel.getSeamCarver());
 
-		Iterator<BrushStroke> revItr = this.strokes.descendingIterator();
+		// Iterator<BrushStroke> revItr = this.strokes.descendingIterator();
 
 		// this isnt great...
 		// while (revItr.hasNext()) {
