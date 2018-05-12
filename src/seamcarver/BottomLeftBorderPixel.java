@@ -2,7 +2,11 @@ package seamcarver;
 
 import java.util.Iterator;
 
-// bottom left corner border pixel, just linked to above left border pixel or TopLeftBorderPixel
+// bottom left corner border pixel
+// top: LeftBorderPixel or TopLeftBorderPixel
+// bottom: none
+// left: none
+// right: none
 class BottomLeftBorderPixel extends ALeftBorderPixel {
 
 	@Override
@@ -10,6 +14,7 @@ class BottomLeftBorderPixel extends ALeftBorderPixel {
 		top.linkBottom(this);
 	}
 
+	// the bottom left border pixel doesn't need to remember its neighbors
 	@Override
 	public void linkTop(LeftBorderPixel top) {
 
@@ -20,6 +25,7 @@ class BottomLeftBorderPixel extends ALeftBorderPixel {
 
 	}
 
+	// just returns empty iterator, no more left border pixels in the column
 	@Override
 	public Iterator<LeftBorderPixel> iterator() {
 		return NothingIterator.inst;

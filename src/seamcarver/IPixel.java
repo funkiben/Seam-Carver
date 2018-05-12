@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javafx.scene.paint.Color;
 
 // represents a pixel
+// contains the necessary operations colored pixels expect of their neighbors essentially
 interface IPixel {
 
 	// mutually links the two pixels
@@ -90,7 +91,7 @@ interface IPixel {
 	// adds this pixels horizontal seam info to the array list
 	void addHorizontalSeamInfo(ArrayList<AHorizontalSeamInfo> seamInfos);
 
-	// adds this pixelx color to the array list
+	// adds this pixels color to the array list
 	void addColor(ArrayList<Color> colors);
 
 	// checks if this pixel has the given pixel as a left neighbor
@@ -104,8 +105,6 @@ interface IPixel {
 
 	// checks if this pixel has the given pixel as a bottom neighbor
 	boolean isBottom(IPixel pixel);
-
-	// the below methods are for iterators, and they really suck
 
 	// if this is a colored pixel, returns this, otherwise returns null
 	// pretty much casting but a little better i think

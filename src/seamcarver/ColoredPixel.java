@@ -6,7 +6,12 @@ import java.util.Iterator;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
-// a pixel with a color
+// a pixel with a color, stores the content of an image
+// always has four neighbors
+// top: ColoredPixel or TopBorderPixel
+// bottom: ColoredPixel or BottomBorderPixel
+// left: ColoredPixel or LeftBorderPixel
+// right: ColoredPixel or RightBorderPixel
 class ColoredPixel extends APixel {
 
 	private static final double LARGE_ENERGY_AMOUNT = 1000000000;
@@ -37,11 +42,13 @@ class ColoredPixel extends APixel {
 
 	// baises this pixel
 	// pixels can't be biased and avoided simultaneously
+	// EFFECT: this.bias
 	void biasFor() {
 		this.bias = -1;
 	}
 
 	// unbiased this pixel
+	// EFFECT: this.bias
 	void unbias() {
 		this.bias = 0;
 	}
@@ -49,21 +56,25 @@ class ColoredPixel extends APixel {
 	// makes it so this pixel is avoided by adding a large amount to this pixels
 	// energy
 	// pixels can't be biased and avoided simultaneously
+	// EFFECT: this.bias
 	void biasAgainst() {
 		this.bias = 1;
 	}
 
-	// shows this pixel by coloring it red
+	// highlights this pixel by inverting its color
+	// EFFECT: this.highlight
 	void highlight() {
 		this.highlight = true;
 	}
 
 	// removes the highlighting from this pixel
+	// EFFECT: this.highlight
 	void unhighlight() {
 		this.highlight = false;
 	}
 
 	// sets the color of the given x and y to be this.color
+	// EFFECT: pixelWriter
 	void draw(PixelWriter pixelWriter, int x, int y) {
 
 		if (this.highlight) {
@@ -78,6 +89,7 @@ class ColoredPixel extends APixel {
 
 	}
 
+	// gives a color with a green tint added to this.color
 	private Color addGreenTintToColor() {
 		int r = (int) Math.min(255, (this.color.getRed() * 255));
 		int g = (int) Math.min(255, (this.color.getGreen() * 255 + 128));
@@ -85,6 +97,7 @@ class ColoredPixel extends APixel {
 		return Color.rgb(r, g, b);
 	}
 
+	// gives a color with a red tint added to this.color
 	private Color addRedTintToColor() {
 		int r = (int) Math.min(255, (this.color.getRed() * 255 + 128));
 		int g = (int) Math.min(255, (this.color.getGreen() * 255));
@@ -136,6 +149,8 @@ class ColoredPixel extends APixel {
 	}
 
 	// gets the energy of this pixel using adjacent pixel brightnesses
+	// adds or subtracts a really large number to the energy if this pixel is
+	// biased
 	double energy() {
 
 		double vEnergy = this.top.horizontalBrightnessSum() - this.bottom.horizontalBrightnessSum();
@@ -147,6 +162,9 @@ class ColoredPixel extends APixel {
 	}
 
 	// removes this pixel assuming it is part of a vertical seam
+	// fixes up top and bottom links
+	// only works on continuous seams
+	// EFFECT: this.left, this.right, this.top, this.bottom
 	void removeFromVerticalSeam(IPixel nextInSeam) {
 
 		this.left.linkRightMutual(this.right);
@@ -156,12 +174,16 @@ class ColoredPixel extends APixel {
 		} else if (this.top.isRight(nextInSeam)) {
 			this.right.linkTopMutual(this.top);
 		} else if (nextInSeam != this.top) {
-			throw new IllegalStateException("nextInSeam is not a top neighbor!");
+			throw new IllegalStateException(
+					"nextInSeam is not a top neighbor, seam is not continuous");
 		}
 
 	}
 
 	// removes this pixel assuming it is part of a horizontal seam
+	// fixed up right and left links
+	// only works on continuous seams
+	// EFFECT: this.top, this.bottom, this.left, this.right
 	void removeFromHorizontalSeam(IPixel nextInSeam) {
 
 		this.top.linkBottomMutual(this.bottom);
@@ -171,25 +193,32 @@ class ColoredPixel extends APixel {
 		} else if (this.left.isBottom(nextInSeam)) {
 			this.bottom.linkLeftMutual(this.left);
 		} else if (nextInSeam != this.left) {
-			throw new IllegalStateException("nextInSeam is not a left neighbor!");
+			throw new IllegalStateException(
+					"nextInSeam is not a left neighbor, seam is not continuous");
 		}
 
 	}
 
-	// removes this pixel assuming it is part of a vertical seam
+	// same as other removeFromVerticalSeam but works on seams that aren't
+	// continuous
 	// DOES NOT FIX UP VERTICAL LINKS
+	// EFFECT: this.left, this.right
 	void removeFromVerticalSeam() {
 		this.left.linkRightMutual(this.right);
 	}
 
-	// removes this pixel assuming it is part of a horizontal seam
+	// same as other removeFromHorizontalSeam but works on seams that aren't
+	// continuous
 	// DOES NOT FIX UP HORIZONTAL LINKS
+	// EFFECT: this.top, this.bottom
 	void removeFromHorizontalSeam() {
 		this.top.linkBottomMutual(this.bottom);
 	}
 
 	// reinserts this pixel back into the image, assuming it was just removed
 	// with no other operations in between
+	// works on seams that aren't continuous
+	// EFFECT: this.left, this.right, this.top, this.bottom
 	void reinsert() {
 		this.left.linkRight(this);
 		this.right.linkLeft(this);
@@ -197,8 +226,11 @@ class ColoredPixel extends APixel {
 		this.bottom.linkTop(this);
 	}
 
-	// duplicates this pixel assuming the seam is connected, fixes up horizontal
-	// links
+	// creates a new colored pixel to the left of this, with its color the
+	// average of this and this.lefts color
+	// fixes up top and bottom links
+	// only works on seams that are continuous
+	// EFFECT: this.right, this.left, this.top, this.bottom
 	ColoredPixel duplicateToLeft(IPixel aboveNewPixel, IPixel abovePixelInSeam) {
 		ColoredPixel pixel;
 
@@ -212,7 +244,8 @@ class ColoredPixel extends APixel {
 		} else if (this.left.isTop(aboveNewPixel)) {
 			pixel = new ColoredPixel(this.color, this.left, this, abovePixelInSeam, this.bottom);
 		} else {
-			throw new IllegalStateException("unable to locate aboveNewPixel");
+			throw new IllegalStateException(
+					"unable to locate aboveNewPixel, seam is not continuous");
 		}
 
 		pixel.estimateColorHorizontally();
@@ -220,8 +253,11 @@ class ColoredPixel extends APixel {
 		return pixel;
 	}
 
-	// duplicates this pixel assuming the seam is connected, fixes up vertical
-	// links
+	// creates a new colored pixel above this, with its color the average of
+	// this and this.tops color
+	// fixes up left and right links
+	// only works on seams that are continuous
+	// EFFECT: this.right, this.left, this.top, this.bottom
 	ColoredPixel duplicateToTop(IPixel leftNewPixel, IPixel leftPixelInSeam) {
 
 		ColoredPixel pixel;
@@ -236,7 +272,8 @@ class ColoredPixel extends APixel {
 		} else if (this.top.isLeft(leftNewPixel)) {
 			pixel = new ColoredPixel(this.color, leftPixelInSeam, this.right, this.top, this);
 		} else {
-			throw new IllegalStateException("unable to locate leftNewPixel");
+			throw new IllegalStateException(
+					"unable to locate leftNewPixel, seam is not continuous");
 		}
 
 		pixel.estimateColorVertically();
@@ -244,8 +281,9 @@ class ColoredPixel extends APixel {
 		return pixel;
 	}
 
-	// creates a new pixel to the left of this
+	// same as other duplicateToLeft but works on seams that aren't continuous
 	// DOES NOT FIX UP VERTICAL LINKS
+	// EFFECT: this.left
 	ColoredPixel duplicateToLeft() {
 
 		ColoredPixel pixel = new ColoredPixel(this.color, this.left, this, this.top, this.bottom);
@@ -256,8 +294,9 @@ class ColoredPixel extends APixel {
 
 	}
 
-	// creates a new pixel above this
+	// same as other duplicateToTop but works on seams that aren't continuous
 	// DOES NOT FIX UP HORIZONTAL LINKS
+	// EFFECT: this.top
 	ColoredPixel duplicateToTop() {
 
 		ColoredPixel pixel = new ColoredPixel(this.color, this.left, this.right, this.top, this);
@@ -268,13 +307,15 @@ class ColoredPixel extends APixel {
 
 	}
 
-	// calculuates this.vSeamInfo using above neighbors vertical seam infos
+	// calculates this.vSeamInfo using above neighbors vertical seam infos
+	// EFFECT: this.vSeamInfo
 	void calculateVerticalSeamInfo() {
 		ArrayList<AVerticalSeamInfo> seamInfos = this.top.collectVerticalSeamInfos();
 		this.vSeamInfo.calculate(seamInfos);
 	}
 
-	// calculuates this.hSeamInfo using left neighbors horizontal seam infos
+	// calculates this.hSeamInfo using left neighbors horizontal seam infos
+	// EFFECT: this.hSeamInfo
 	void calculateHorizontalSeamInfo() {
 		ArrayList<AHorizontalSeamInfo> seamInfos = this.left.collectHorizontalSeamInfos();
 		this.hSeamInfo.calculate(seamInfos);
@@ -304,23 +345,30 @@ class ColoredPixel extends APixel {
 		return seamInfos;
 	}
 
+	// adds the vertical seam info for this pixel to the given array list
+	// EFFECT: seamInfos
 	@Override
 	public void addVerticalSeamInfo(ArrayList<AVerticalSeamInfo> seamInfos) {
 		seamInfos.add(this.vSeamInfo);
 	}
 
+	// adds the horizontal seam info for this pixel to the given array list
+	// EFFECT: seamInfos
 	@Override
 	public void addHorizontalSeamInfo(ArrayList<AHorizontalSeamInfo> seamInfos) {
 		seamInfos.add(this.hSeamInfo);
 	}
 
+	// adds the color for this pixel to the given array list
+	// EFFECT: colors
 	@Override
 	public void addColor(ArrayList<Color> colors) {
 		colors.add(this.color);
 	}
 
-	// estimates the color of this pixel by looking at the colors left and right
-	// neighbors
+	// estimates the color of this pixel by looking at the colors of left and
+	// right neighbors
+	// EFFECT: this.color
 	private void estimateColorVertically() {
 
 		ArrayList<Color> colors = new ArrayList<Color>();
@@ -332,7 +380,8 @@ class ColoredPixel extends APixel {
 	}
 
 	// estimates the color of this pixel by looking at the top and bottom
-	// neighbors
+	// neighbor colors
+	// EFFECT: this.color
 	private void estimateColorHorizontally() {
 
 		ArrayList<Color> colors = new ArrayList<Color>();
@@ -343,7 +392,7 @@ class ColoredPixel extends APixel {
 		this.color = ColoredPixel.averageColor(colors);
 	}
 
-	// gets the average color of the array list of colors
+	// gets the average color of the given array list of colors
 	private static Color averageColor(ArrayList<Color> colors) {
 		int r = 0;
 		int g = 0;
@@ -379,7 +428,7 @@ class ColoredPixel extends APixel {
 	}
 
 	// gets the cheapest horizontal seam in the column, assumes this to be first
-	// in row
+	// in column
 	HorizontalSeamInfo cheapestHorizontalSeamInColumn() {
 
 		HorizontalSeamInfo cheapest = this.hSeamInfo;
@@ -394,6 +443,8 @@ class ColoredPixel extends APixel {
 
 	}
 
+	// the above methods check if the given pixel is this.left, this.right,
+	// this.top, or this.bottom
 	@Override
 	public boolean isLeft(IPixel pixel) {
 		return pixel == this.left;
@@ -535,6 +586,8 @@ class ColoredPixel extends APixel {
 
 	}
 
+	// test method for testing the structural invariant
+	// checks that all pixels neighbors link back to themselves
 	void testStructuralIntegrity() {
 		boolean leftGood = true, rightGood = true, topGood = true, bottomGood = true;
 

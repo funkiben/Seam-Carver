@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import seamcarver.SeamCarver;
 
+// a brush mode for biasing for pixels
 public class BiasForBrushMode implements IBrushMode {
 
 	private static final Color COLOR = Color.rgb(0, 255, 0, 0.75);

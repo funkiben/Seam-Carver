@@ -3,7 +3,7 @@ package seamcarver;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-// the body of a vertical seam
+// the body of a vertical seam, has at least one pixel
 class VerticalSeamInfo extends AVerticalSeamInfo {
 
 	private final ColoredPixel pixel;
@@ -22,6 +22,8 @@ class VerticalSeamInfo extends AVerticalSeamInfo {
 
 	}
 
+	// calculates this.cameFrom and this.energy from the given parents
+	// EFFECT: this.cameFrom, this.energy
 	void calculate(ArrayList<AVerticalSeamInfo> parents) {
 		this.cameFrom = ASeamInfo.lowestEnergy(parents);
 		this.energy = this.pixel.energy() + this.cameFrom.energy;

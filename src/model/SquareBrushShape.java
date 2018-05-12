@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
+// represents a square brush shape
 public class SquareBrushShape implements IBrushShape {
 
 	@Override

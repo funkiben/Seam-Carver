@@ -23,7 +23,7 @@ public class UndoManager {
 	}
 
 	// undos the last operation
-	// effect: this.undoOps
+	// effect: this.undoOps, this.nameOps
 	public void undoNext() {
 		this.names.pop();
 		this.undoOps.pop().undo();
@@ -41,11 +41,13 @@ public class UndoManager {
 	}
 
 	// binds the given property to the next operation that can be undone
+	// EFFECT: property
 	public void bindToNextOpName(StringProperty property) {
 		property.bind(this.nextOpNameProperty);
 	}
 
 	// clears all undoable operations
+	// EFFECT: this.names, this.undoOps, this.nextOpNameProperty
 	public void clear() {
 		this.names.clear();
 		this.undoOps.clear();

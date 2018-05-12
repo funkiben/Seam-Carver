@@ -7,7 +7,7 @@ interface ISeam extends Iterable<ColoredPixel> {
 	void reinsert();
 
 	// removes this seam from the image
-	// seam must be continuous for this method
+	// seam must be continuous for this method to work
 	void remove();
 
 	// removes this seam from the image

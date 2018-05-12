@@ -3,10 +3,11 @@ package seamcarver;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+// a horizontal seam info that contains at least one pixel
 class HorizontalSeamInfo extends AHorizontalSeamInfo {
 
 	private final ColoredPixel pixel;
-	// this is null until calculuated
+	// this is null until calculated
 	private AHorizontalSeamInfo cameFrom = null;
 
 	HorizontalSeamInfo(ColoredPixel pixel) {
@@ -21,6 +22,8 @@ class HorizontalSeamInfo extends AHorizontalSeamInfo {
 
 	}
 
+	// calculates this.cameFrom and this.energy using the given parents
+	// EFFECT: this.cameFrom, this.energy
 	void calculate(ArrayList<AHorizontalSeamInfo> parents) {
 		this.cameFrom = ASeamInfo.lowestEnergy(parents);
 		this.energy = this.pixel.energy() + this.cameFrom.energy;

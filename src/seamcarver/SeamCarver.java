@@ -94,6 +94,7 @@ public class SeamCarver {
 	// function object for acting upon pixels given the pixels coordinates
 	private interface PixelCoordOperation {
 
+		// does something to a pixel given the pixel and its coords
 		void op(ColoredPixel pixel, int x, int y);
 
 	}
@@ -135,7 +136,7 @@ public class SeamCarver {
 
 	}
 
-	// makes all pixels avoided
+	// makes all pixels with the given coordinates avoided
 	public void biasAgainstPixels(Collection<Point2D> points) {
 
 		this.coordIterate((pixel, x, y) -> {
@@ -241,6 +242,7 @@ public class SeamCarver {
 
 		this.width -= clampedAmount;
 
+		// add an undo operation to undo the removal
 		this.operations.push(() -> {
 
 			while (!seams.isEmpty()) {
@@ -271,6 +273,7 @@ public class SeamCarver {
 
 		this.height -= clampedAmount;
 
+		// add an undo operation to undo the removal
 		this.operations.push(() -> {
 
 			while (!seams.isEmpty()) {
@@ -283,11 +286,15 @@ public class SeamCarver {
 
 	}
 
-	// inserts vertical seams, returns all the seams inserted
+	// inserts vertical seams
+	// removes n seams to figure out which seams to duplicate, and reinserts
+	// them after
 	public void insertVerticalSeams(int amount) {
 
 		Deque<ISeam> removedSeams = new ArrayDeque<ISeam>();
 
+		// first remove the given number of seams, keep track of the seams
+		// removed
 		for (int i = 0; i < amount; i++) {
 			ISeam seam = this.calculateCheapestVerticalSeam();
 
@@ -297,22 +304,27 @@ public class SeamCarver {
 
 		}
 
+		// reinsert the removed seams
 		for (ISeam seam : removedSeams) {
 			seam.reinsert();
 		}
 
 		Deque<ISeam> newSeams = new ArrayDeque<ISeam>();
 
+		// now duplicate the previously removed then reinserted seams
+		// dont fix up vertical links, because the seams become disconnected
 		while (!removedSeams.isEmpty()) {
 			ISeam seam = removedSeams.pop();
 			ISeam dupe = seam.duplicateDontFixLinks();
 			newSeams.push(dupe);
 		}
 
+		// fix all the broken vertical links
 		this.fixBrokenVerticalLinks();
-		
+
 		this.width += amount;
 
+		// add undo operation to undo the insertion
 		this.operations.push(() -> {
 
 			while (!newSeams.isEmpty()) {
@@ -327,8 +339,13 @@ public class SeamCarver {
 
 	}
 
-	// inserts horizontal seams, returns all the seams inserted
+	// inserts horizontal seams
+	// removes n seams to figure out which seams to duplicate, and reinserts
+	// them after
 	public void insertHorizontalSeams(int amount) {
+
+		// same operation as inserting vertical seams, just with horizontal
+		// seams
 
 		Deque<ISeam> removedSeams = new ArrayDeque<ISeam>();
 
@@ -371,8 +388,8 @@ public class SeamCarver {
 
 	}
 
-	// fixed vertical broken links, used after inserting vertical seams because
-	// the seams become broken
+	// fixes broken vertical links caused by removing or duplicating
+	// disconnected vertical seams
 	private void fixBrokenVerticalLinks() {
 
 		Deque<IPixel> prevRow = new ArrayDeque<IPixel>();
@@ -395,8 +412,8 @@ public class SeamCarver {
 
 	}
 
-	// fixes horizontal broken links, used after inserting horizontal seams
-	// because seams become broken
+	// fixes broken horizontal links causing by removing or duplicating
+	// disconnected horizontal seams
 	private void fixBrokenHorizontalLinks() {
 
 		Deque<IPixel> prevColumn = new ArrayDeque<IPixel>();
@@ -419,14 +436,17 @@ public class SeamCarver {
 
 	}
 
+	// gets the current carved images width
 	public int getWidth() {
 		return this.width;
 	}
 
+	// gets the current carved images height
 	public int getHeight() {
 		return this.height;
 	}
 
+	// for testing the structural invariant of the pixel data structure
 	private void testStructuralIntegrity() {
 
 		for (TopBorderPixel column : this.topLeft.columns()) {

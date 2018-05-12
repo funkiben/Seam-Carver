@@ -15,7 +15,7 @@ public class PixelBrushModel {
 	private final SeamCarverModel seamCarverModel;
 	private final UndoManager undoManager;
 	private final Deque<BrushStroke> strokes = new ArrayDeque<BrushStroke>();
-	// null until user creates a stroke
+	// null when the user is not painting a stroke
 	private BrushStroke currentStroke = null;
 
 	private final ObjectProperty<WritableImage> canvasProperty =
@@ -33,7 +33,8 @@ public class PixelBrushModel {
 	}
 
 	// finishes the current stroke and applies bias to all the pixels
-	// EFFECT: this.currentStroke, strokes,
+	// EFFECT: this.currentStroke, this.strokes, this.seamCarverModel,
+	// this.undoManager
 	public void finishStroke() {
 		this.strokes.push(this.currentStroke);
 
@@ -49,7 +50,7 @@ public class PixelBrushModel {
 
 	// undos the last bias stroke
 	// returns false if there are no bias strokes
-	// EFFECT: this.strokes, this.seamCarver, this.canvas
+	// EFFECT: this.strokes, this.seamCarver, this.canvasProperty
 	public boolean undoLastStroke() {
 
 		if (this.strokes.isEmpty()) {
@@ -73,7 +74,8 @@ public class PixelBrushModel {
 	}
 
 	// removes all pixel bias
-	// EFFECT: this.strokes, this.canvasProperty, this.seamCarver
+	// EFFECT: this.strokes, this.canvasProperty, this.seamCarver,
+	// this.currentStroke
 	public void removeAllBias() {
 
 		this.clearStrokes();
@@ -92,7 +94,7 @@ public class PixelBrushModel {
 	}
 
 	// creates a new canvas matching the current size of the carved image
-	// EFFECT: this.canvas
+	// EFFECT: this.canvasProperty
 	public void makeNewCanvas() {
 		this.canvasProperty.set(new WritableImage(this.seamCarverModel.getWidth(),
 				this.seamCarverModel.getHeight()));
@@ -110,7 +112,7 @@ public class PixelBrushModel {
 	}
 
 	// makes a brush stroke at the given coordinates with the given brush size
-	// EFFECT: this.currentStroke, this.canvasProperty
+	// EFFECT: this.currentStroke
 	public void startStroke(int brushSize, IBrushShape shape, IBrushMode mode) {
 		this.currentStroke = new BrushStroke(brushSize, shape, mode);
 	}

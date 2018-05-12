@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // the top border pixel
+// top: none
+// bottom: ColoredPixel
+// left: LeftBorderPixel or TopLeftBorderPixel
+// right: LeftBorderPixel or TopRightBorderPixel
 class TopBorderPixel extends ATopBorderPixel {
 
 	private final EmptyVerticalSeam emptySeam;
@@ -21,6 +25,7 @@ class TopBorderPixel extends ATopBorderPixel {
 
 	// BE CAREFUL, initializes bottom with NULL, you better give it a value
 	// later!
+	// should only be used when initializing the pixel data structure
 	TopBorderPixel(ABorderPixel left, ATopBorderPixel right) {
 
 		left.linkRightMutual(this);
@@ -102,20 +107,29 @@ class TopBorderPixel extends ATopBorderPixel {
 		return this;
 	}
 
+	// removes this top border pixel
+	// EFFECT: this.right, this.left
 	void remove() {
 		this.right.linkLeftMutual(this.left);
 	}
 
+	// creates a new top border pixel to the left of this
+	// EFFECT: this.left
 	TopBorderPixel duplicate() {
 		return new TopBorderPixel(this.left, this, this.bottom);
 	}
 
+	// reinserts this top border pixel assuming it was just removed with no
+	// operations in between
+	// EFFECT: this.bottom, this.right, this.left
 	void reinsert() {
 		this.bottom.linkTop(this);
 		this.left.linkRight(this);
 		this.right.linkLeft(this);
 	}
 
+	// gets the cheapest horizontal seam in the column of colored pixels below
+	// this
 	HorizontalSeamInfo cheapestHorizontalSeam() {
 		return this.bottom.cheapestHorizontalSeamInColumn();
 	}
@@ -125,6 +139,7 @@ class TopBorderPixel extends ATopBorderPixel {
 		return this.bottom.columnIterable();
 	}
 
+	// gets an iterator for the top border pixels in this row
 	@Override
 	public Iterator<TopBorderPixel> iterator() {
 		return new TopBorderPixelIterator();
@@ -133,6 +148,7 @@ class TopBorderPixel extends ATopBorderPixel {
 	// an iterator for top border pixels, left to right
 	private class TopBorderPixelIterator implements Iterator<TopBorderPixel> {
 
+		// will be null when there are no more top border pixels in this row
 		private TopBorderPixel current;
 
 		TopBorderPixelIterator() {

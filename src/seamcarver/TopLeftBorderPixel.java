@@ -1,6 +1,10 @@
 package seamcarver;
 
 // the top left border pixel, kind of like a master pixel
+// top: none
+// bottom: LeftBorderPixel or BottomLeftBorderPixel
+// left: none
+// right: TopBorderPixel or TopRightBorderPixel
 class TopLeftBorderPixel extends ABorderPixel {
 
 	private ATopBorderPixel right;

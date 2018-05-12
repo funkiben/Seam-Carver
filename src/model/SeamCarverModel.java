@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
 import seamcarver.SeamCarver;
 
-// the models for the seam carver app
+// the model for the seam carver app
 // interacts with the seam carving library
 public class SeamCarverModel {
 
@@ -31,13 +31,13 @@ public class SeamCarverModel {
 	}
 
 	// updates the image property to the current carved image
-	// EFFECT: this.image
+	// EFFECT: this.imageProperty
 	public void updateImage() {
 		this.imageProperty.set(this.seamCarver.makeImage());
 	}
 
 	// creates a new seam carver object from the original object
-	// EFFECT: this.seamCarver
+	// EFFECT: this.seamCarver, this.imageProperty
 	public void revertToOriginal() {
 		this.seamCarver = new SeamCarver(this.originalImage);
 		this.updateImage();
@@ -68,6 +68,7 @@ public class SeamCarverModel {
 	}
 
 	// fabricates artificial horizontal seams to expand the image vertically
+	// EFFECT: this.seamCarver, this.imageProperty
 	public void expandVertically(int amount) {
 
 		this.seamCarver.insertHorizontalSeams(amount);
@@ -79,6 +80,7 @@ public class SeamCarverModel {
 	}
 
 	// fabricates artificial vertical seams to expand the image horizontally
+	// EFFECT: this.seamCarver, this.imageProperty
 	public void expandHorizontally(int amount) {
 
 		this.seamCarver.insertVerticalSeams(amount);
@@ -90,6 +92,7 @@ public class SeamCarverModel {
 	}
 
 	// adds an undo operation for expansion given the seams that were inserted
+	// EFFECT: this.undoManager
 	private void addUndoOperationForSeamCarver(String name) {
 		this.undoManager.push(name, () -> {
 			this.seamCarver.undoLastOperation();

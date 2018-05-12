@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
+// brush shape thats a circle
 public class CircleBrushShape implements IBrushShape {
 
 	@Override

@@ -12,7 +12,7 @@ abstract class ABorderPixel extends APixel {
 		return 0.0;
 	}
 
-	// technically border pixels don't always have 0 vertical and horizontal
+	// technically some border pixels can have 0 vertical and horizontal
 	// brightness sums, but it doesn't matter
 	@Override
 	public double verticalBrightnessSum() {
@@ -24,7 +24,7 @@ abstract class ABorderPixel extends APixel {
 		return 0.0;
 	}
 
-	// collecting seam infos will do nothing on default
+	// collecting seam infos will do nothing by default
 
 	@Override
 	public ArrayList<AVerticalSeamInfo> collectVerticalSeamInfos() {

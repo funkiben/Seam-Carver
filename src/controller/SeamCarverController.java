@@ -91,7 +91,6 @@ public class SeamCarverController {
 	}
 
 	// initializes the display controller
-	// EFFECT: this.imageView's fit and height properties
 	@FXML
 	void initialize() {
 
@@ -175,6 +174,7 @@ public class SeamCarverController {
 		this.pixelBrushModel.finishStroke();
 	}
 
+	// begins a stroke
 	@FXML
 	void startStroke() {
 		int brushSize = Integer.parseInt(this.biasBrushSizeField.getText());

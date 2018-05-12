@@ -3,7 +3,7 @@ package seamcarver;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-// abstract class for seam infos
+// abstract class for ISeam
 abstract class ASeamInfo implements ISeam, Comparable<ASeamInfo> {
 
 	// returns the seam info with the lowest energy
@@ -19,7 +19,7 @@ abstract class ASeamInfo implements ISeam, Comparable<ASeamInfo> {
 	// ugh a getter
 	abstract IPixel pixel();
 
-	// compares this seam to the other seam using this.energy
+	// compares this seam to the other seam using this.energy and other.energy
 	@Override
 	public int compareTo(ASeamInfo other) {
 		return Double.compare(this.energy, other.energy);

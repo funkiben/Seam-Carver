@@ -1,6 +1,6 @@
 package seamcarver;
 
-// abstract class for APixel
+// abstract class for IPixel
 abstract class APixel implements IPixel {
 
 	// helper methods for throwing runtime exceptions
@@ -52,7 +52,7 @@ abstract class APixel implements IPixel {
 		bottom.linkTop(this);
 	}
 
-	// have all other methods throw errors otherwise
+	// have all link methods throw errors by default
 
 	@Override
 	public void linkLeft(IPixel left) {

@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // the left border pixel
+// top: LeftBorderPixel or TopLeftBorderPixel
+// bottom: LeftBorderPixel or BottomLeftBorderPixel
+// left: none
+// right: ColoredPixel
 class LeftBorderPixel extends ALeftBorderPixel {
 
 	private final EmptyHorizontalSeam emptySeam;
@@ -20,6 +24,7 @@ class LeftBorderPixel extends ALeftBorderPixel {
 	}
 
 	// initialized right with null, USE WITH CAUTION, null links are B A D
+	// should only be used when initializing the pixel data structure
 	LeftBorderPixel(ABorderPixel top, ALeftBorderPixel bottom) {
 
 		top.linkBottomMutual(this);
@@ -101,20 +106,29 @@ class LeftBorderPixel extends ALeftBorderPixel {
 		return this;
 	}
 
+	// removes this pixel
+	// EFFECT: this.bottom, this.top
 	void remove() {
 		this.bottom.linkTopMutual(this.top);
 	}
 
+	// creates a new border pixel above this
+	// EFFECT: this.top
 	LeftBorderPixel duplicate() {
 		return new LeftBorderPixel(this.top, this, this.right);
 	}
 
+	// reinserts this border pixel assuming it was just removed with no
+	// operations in betweem
+	// EFFECT: this.bottom, this.top, this.right
 	void reinsert() {
 		this.bottom.linkTop(this);
 		this.top.linkBottom(this);
 		this.right.linkLeft(this);
 	}
 
+	// gets the cheapest vertical seam in the row of colored pixels to the right
+	// of this
 	VerticalSeamInfo cheapestVerticalSeam() {
 		return this.right.cheapestVerticalSeamInRow();
 	}
@@ -133,6 +147,7 @@ class LeftBorderPixel extends ALeftBorderPixel {
 	// an iterator for left border pixels, top to bottom
 	private class LeftBorderPixelIterator implements Iterator<LeftBorderPixel> {
 
+		// will be null when there are no more left border pixels in this column
 		private LeftBorderPixel current;
 
 		LeftBorderPixelIterator() {

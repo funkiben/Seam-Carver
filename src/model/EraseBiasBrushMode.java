@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import seamcarver.SeamCarver;
 
+// a brush mode that removes all bias from pixels
 public class EraseBiasBrushMode implements IBrushMode {
 
 	private static final Color COLOR = Color.rgb(255, 255, 255, 0.75);
